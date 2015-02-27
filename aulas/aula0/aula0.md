@@ -89,4 +89,10 @@ software**.
 
 # Apresentação --- (X)
 
+- Slides, listas e implementações em:
+
+http://github.com/rodrigogribeiro/type-theory
+
+# Apresentação --- (XI)
+
 - Bom semestre de trabalho para todos nós!
