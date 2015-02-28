@@ -30,7 +30,7 @@ software**.
 
 - Desenvolver  intuição sobre raciocínio **informal** sobre programas.
 
-- Provar propriedades sobre todos os programas de uma data linguagem.
+- Provar propriedades sobre todos os programas de uma dada linguagem.
 
 - Compreender recursos presentes linguagens atuais e sua interação
     - Projetar sua própria linguagem!

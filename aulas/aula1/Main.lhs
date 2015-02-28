@@ -13,6 +13,11 @@ Interpretador --- (I)
 
 > module Main where
 
+> import Data.Int (Int8)
+> import Control.Applicative hiding (many, (<|>))
+> import Control.Monad.State
+> import Control.Monad.Trans
+> import Control.Monad.Writer
 > import Text.ParserCombinators.Parsec
 
 
@@ -62,33 +67,116 @@ Interpretador --- (V)
     - $l$: sequência de bytes a esquerda do ponteiro
     - $x$: byte sobre o ponteiro
     - $r$: sequência de bytes a direita do ponteiro
+
+Interpretador --- (VI)
+======================
+
+- Estrutura do interpretador
+    - Análise sintática
+    - Execução
+- Análise sintática usando Parsec
+
+Interpretador --- (VII)
+========================
+
+- Biblioteca de Parsing usando combinadores.
+     - Funções primitivas de análise
+     - Funções para combinar.
+
+Interpretador --- (VIII)
+=========================
  
-Intepretador --- (VI)
+- Caracteres considerados para parsing: < > . + - [ ] ,
+- Verificação sintática: Todo "[" possui "]" correspondente
+- Resultado do parsing: árvore sintática
+
+Interpretador --- (IX)
+======================
+
+- Estrutura sintática
+
+> data Cmd = ML | MR | Inc | Dec
+>          | Pr | Rd | LL  | LR
+>          deriving (Eq, Ord, Show)
+
+> type Program = [Cmd]
+
+
+Interpretador --- (X)
 =====================
- 
+
+- Análise sintática
+
+> pProgram :: Parser Program
+> pProgram = nop *> many (between nop nop pins)
+
+> nop :: Parser String
+> nop = many (noneOf ops) <?> "nop"
+
+
+Interpretador --- (XI)
+======================
+
+-- Análise sintática
+
+> pins :: Parser Cmd
+> pins = choice list
+
+> list = map f table
+>        where
+>          f (c,t) = const t <$> char c
+
+> table = zip ops [ML, MR,Inc,Dec,Pr,Rd,LL,LR]
+
+> ops :: String
+> ops = "><+-.,[]"
+
+
+Intepretador --- (XII)
+=====================
+
 - Por simplicidade, usaremos o tipo Int de Haskell
   para bytes.
 
-> type Byte = Int
+> type Byte = Int8
 > type Bytes = [Byte]
 
-Interpretador --- (VII)
-=====================
+Interpretador --- (XIII)
+========================
 
-- Representando a configuração de um programa
+- Representando a configuração da máquina
+    - Posição atual da fita de bytes
+    - Instrução atual do programa
 
-> data Conf = Conf {
->                left    :: Bytes, -- esquerda de ptr
->                current :: Byte,  -- ptr
->                right   :: Bytes  -- direita de ptr
+Interpretador --- (XIV)
+========================
+
+- Configurações
+
+> data Conf a = Conf {
+>                left    :: [a], -- esquerda de ptr
+>                current :: a,   -- ptr
+>                right   :: [a]  -- direita de ptr
 >             }
+ 
+Interpretador --- (XV)
+========================
 
-Interpretador --- (VIII)
-======================
+- Configuração da fita
 
+> type Tape = Conf Byte
+
+- Posição do programa
+
+> type ProgState = Conf Cmd
+
+ 
+Interpretador --- (XVI)
+=======================
+ 
 - Configuração inicial de um programa
 
-> initial :: Conf
+> initial :: Tape
 > initial = Conf {
 >              left    = zeros,
 >              current = 0,
@@ -97,3 +185,109 @@ Interpretador --- (VIII)
 
 > zeros :: Bytes
 > zeros = repeat 0
+
+
+Interpretador --- (XVII)
+======================
+
+- Mônada para execução de programas.
+     - Mônada para logging de comandos executados.
+     - Estado armazenado pela mônada State.
+
+> type BF a = WriterT [Cmd] (StateT Tape IO) a
+
+
+Interpretador --- (XVIII)
+=========================
+
+- Executando comandos individuais
+
+> moveLeft :: Tape -> Tape
+> moveLeft (Conf [] _ [])         = error "Impossible!"
+> moveLeft (Conf (l:ls) b (r:rs)) = Conf ls l (b : r : rs)
+
+> moveRight :: Tape -> Tape
+> moveRight (Conf [] _ [])         = error "Impossible!"
+> moveRight (Conf (l:ls) b (r:rs)) = Conf (b:l:ls) r rs
+
+
+Interpretador --- (XIX)
+=======================
+
+- Executando comandos individuais
+
+> incr :: Tape -> Tape
+> incr (Conf ls b rs) = Conf ls (b+1) rs
+
+> decr :: Tape -> Tape
+> decr (Conf ls b rs) = Conf ls (b - 1) rs
+
+Interpretador --- (XX)
+========================
+
+- Executando comandos individuais
+
+> iprint :: Tape -> BF ()
+> iprint = liftIO . print . current
+
+> iread :: Tape -> BF ()
+> iread (Conf ls _ rs)
+>         = do
+>             s <- liftIO getLine
+>             put (Conf ls (read s) rs)
+
+
+Interpretador --- (XX)
+=======================
+
+- Executando comandos individuais
+
+> loopLeft :: Byte -> ProgState -> BF ProgState
+> loopLeft b e@(Conf lp LL rp)
+>             = if b == 0 then moveUntil LR e
+>                 else nextCmd e
+> loopLeft b (Conf _  _ _ ) = error "Impossible!"
+
+
+Interpretador --- (XXI)
+=======================
+
+- Executando comandos individuais
+
+> loopRight :: Byte -> ProgState -> BF ProgState
+> loopRight b e@(Conf lp LR rp)
+>             = if b /= 0 then moveUntil LL e
+>                 else nextCmd e
+> loopRight b (Conf _  _ _ ) = error "Impossible!"
+
+
+Interpretador --- (XXII)
+=========================
+
+- Executando comandos individuais
+
+> nextCmd :: ProgState -> BF ProgState
+> nextCmd e@(Conf lp c []) = return e
+> nextCmd (Conf lp c (r:rp)) = return (Conf (c:lp) r rp)
+
+ 
+Interpretador --- (XXIII)
+=========================
+
+- Executar comandos individuais
+
+> moveUntil :: Cmd -> ProgState -> BF ProgState
+> moveUntil LL c@(Conf [] _ _) = return c
+> moveUntil LL (Conf (l:lp) c rp)
+>        = if l == LL then return (Conf lp LL (c : rp))
+>            else moveUntil LL (Conf lp LL (c:rp))
+> moveUntil LR c@(Conf [] _ _) = return c
+> moveUntil LR (Conf lp c (r:rp))
+>        = if r == LR then return (Conf (c:lp) r rp)
+>            else moveUntil LR (Conf (c:lp) r rp)
+
+
+Interpretador --- (XXIV)
+========================
+
+- Executando programas
