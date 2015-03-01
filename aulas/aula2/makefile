@@ -5,7 +5,11 @@ pdf:
 	pdflatex aula2.tex
 	pdflatex aula2.tex
 
-clear:
+clean:
 	rm *.tex
 	rm *.pdf
 	rm *.log
+	rm *.nav
+	rm *.aux
+	rm *.snm
+	rm *.toc
