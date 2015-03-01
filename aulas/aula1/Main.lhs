@@ -99,15 +99,13 @@ Interpretador --- (IX)
 >          | Pr | Rd | LL  | LR
 >          deriving (Eq, Ord, Show)
 
-> type Program = [Cmd]
-
 
 Interpretador --- (X)
 =====================
 
 - Análise sintática
 
-> pProgram :: Parser Program
+> pProgram :: Parser [Cmd]
 > pProgram = nop *> many (between nop nop pins)
 
 > nop :: Parser String
@@ -168,13 +166,13 @@ Interpretador --- (XV)
 
 - Posição do programa
 
-> type ProgState = Conf Cmd
+> type Program = Conf Cmd
 
  
 Interpretador --- (XVI)
 =======================
  
-- Configuração inicial de um programa
+- Configuração inicial da fita
 
 > initial :: Tape
 > initial = Conf {
@@ -188,6 +186,19 @@ Interpretador --- (XVI)
 
 
 Interpretador --- (XVII)
+========================
+
+- Configuração inicial do programa
+
+> program :: [Cmd] -> Program
+> program (c:cs) = Conf {
+>                    left    = [] ,
+>                    current = c  ,
+>                    right   = cs
+>                  }
+
+
+Interpretador --- (XVIII)
 ======================
 
 - Mônada para execução de programas.
@@ -196,8 +207,11 @@ Interpretador --- (XVII)
 
 > type BF a = WriterT [Cmd] (StateT Tape IO) a
 
+> run :: [Cmd] -> IO ((Program, [Cmd]),Tape)
+> run cs = runStateT (runWriterT (exec (program cs)))
+>                    initial
 
-Interpretador --- (XVIII)
+Interpretador --- (XIX)
 =========================
 
 - Executando comandos individuais
@@ -211,7 +225,7 @@ Interpretador --- (XVIII)
 > moveRight (Conf (l:ls) b (r:rs)) = Conf (b:l:ls) r rs
 
 
-Interpretador --- (XIX)
+Interpretador --- (XX)
 =======================
 
 - Executando comandos individuais
@@ -222,7 +236,7 @@ Interpretador --- (XIX)
 > decr :: Tape -> Tape
 > decr (Conf ls b rs) = Conf ls (b - 1) rs
 
-Interpretador --- (XX)
+Interpretador --- (XXI)
 ========================
 
 - Executando comandos individuais
@@ -237,46 +251,46 @@ Interpretador --- (XX)
 >             put (Conf ls (read s) rs)
 
 
-Interpretador --- (XX)
+Interpretador --- (XXII)
 =======================
 
 - Executando comandos individuais
 
-> loopLeft :: Byte -> ProgState -> BF ProgState
+> loopLeft :: Byte -> Program -> BF Program
 > loopLeft b e@(Conf lp LL rp)
 >             = if b == 0 then moveUntil LR e
 >                 else nextCmd e
 > loopLeft b (Conf _  _ _ ) = error "Impossible!"
 
 
-Interpretador --- (XXI)
+Interpretador --- (XXIII)
 =======================
 
 - Executando comandos individuais
 
-> loopRight :: Byte -> ProgState -> BF ProgState
+> loopRight :: Byte -> Program -> BF Program
 > loopRight b e@(Conf lp LR rp)
 >             = if b /= 0 then moveUntil LL e
 >                 else nextCmd e
 > loopRight b (Conf _  _ _ ) = error "Impossible!"
 
 
-Interpretador --- (XXII)
+Interpretador --- (XXIV)
 =========================
 
 - Executando comandos individuais
 
-> nextCmd :: ProgState -> BF ProgState
+> nextCmd :: Program -> BF Program
 > nextCmd e@(Conf lp c []) = return e
 > nextCmd (Conf lp c (r:rp)) = return (Conf (c:lp) r rp)
 
  
-Interpretador --- (XXIII)
+Interpretador --- (XXV)
 =========================
 
 - Executar comandos individuais
 
-> moveUntil :: Cmd -> ProgState -> BF ProgState
+> moveUntil :: Cmd -> Program -> BF Program
 > moveUntil LL c@(Conf [] _ _) = return c
 > moveUntil LL (Conf (l:lp) c rp)
 >        = if l == LL then return (Conf lp LL (c : rp))
@@ -285,9 +299,9 @@ Interpretador --- (XXIII)
 > moveUntil LR (Conf lp c (r:rp))
 >        = if r == LR then return (Conf (c:lp) r rp)
 >            else moveUntil LR (Conf (c:lp) r rp)
+> moveUtil _ _ = error "Impossible!"
 
-
-Interpretador --- (XXIV)
+Interpretador --- (XXVI)
 ========================
 
 - Executando programas
