@@ -97,7 +97,7 @@ Interpretador --- (IX)
 
 > data Cmd = ML | MR | Inc | Dec
 >          | Pr | Rd | LL  | LR
->          deriving (Eq, Ord, Show)
+>          deriving (Eq, Ord)
 
 
 Interpretador --- (X)
@@ -127,7 +127,7 @@ Interpretador --- (XI)
 > table = zip ops [ML, MR,Inc,Dec,Pr,Rd,LL,LR]
 
 > ops :: String
-> ops = "><+-.,[]"
+> ops = "<>+-.,[]"
 
 
 Intepretador --- (XII)
@@ -262,7 +262,7 @@ Interpretador --- (XXII)
 >                b <- gets current
 >                if b == 0 then moveUntil LR e
 >                  else nextCmd e
-> loopLeft (Conf _  _ _ ) = error "Impossible!"
+> loopLeft (Conf{} ) = error "Impossible!"
 
 
 Interpretador --- (XXIII)
@@ -276,7 +276,7 @@ Interpretador --- (XXIII)
 >                b <- gets current
 >                if b /= 0 then moveUntil LL e
 >                 else nextCmd e
-> loopRight (Conf _  _ _ ) = error "Impossible!"
+> loopRight (Conf{} ) = error "Impossible!"
 
 
 Interpretador --- (XXIV)
@@ -326,13 +326,53 @@ Interpretador --- (XXVII)
 - Executando Programas
 
 > next :: Program -> BF Program
-> next c@(Conf _ _ []) = return c
-> next c               = nextCmd c >>= exec
+> next c@(Conf _ b []) = tell [b] >> return c
+> next c
+>   = do
+>       tell [current c]
+>       nextCmd c >>= exec
 
 
 Interpretador --- (XXVIII)
 ==========================
 
+- Função main
  
- 
->
+> main :: IO ()
+> main
+>   = do
+>       putStrLn "The simple brainfuck interpreter."
+>       putStrLn "**********************************"
+>       putStr "Type your program:"
+>       liftM (parse pProgram "") getLine >>= bf
+
+
+Interpretador --- (XXIX)
+========================
+
+- Função bf
+
+> bf :: Either ParseError [Cmd] -> IO ()
+> bf (Left err) = print err
+> bf (Right cs)
+>         = do
+>             ((p,cs),t) <- run cs
+>             putStrLn "Comandos executados:"
+>             mapM_ print cs
+>             putStrLn "Valor do byte atual:"
+>             print (current t)
+
+Interpretador --- (XXX)
+=======================
+
+- Instância de show
+
+> instance Show Cmd where
+>    show ML = "<"
+>    show MR = ">"
+>    show Inc = "+"
+>    show Dec = "-"
+>    show Pr  = "."
+>    show Rd  = ","
+>    show LL  = "["
+>    show LR  = "]"
