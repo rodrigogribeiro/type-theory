@@ -25,7 +25,7 @@
 %subst numeral a = "\N{" a "}"
 
 %format :+: = "\C{\:\oplus\:}"
- 
+
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
 \newcommand{\greenFG}[1]{\textcolor[rgb]{0,0.4,0}{#1}}
 \newcommand{\blueFG}[1]{\textcolor[rgb]{0,0,0.8}{#1}}
@@ -58,7 +58,6 @@
 \newcommand{\V}[1]{\blue{\mathit{#1}}}
 \newcommand{\N}[1]{\purple{\mathit{#1}}}
 \newcommand{\K}[1]{\red{\mathkw{#1}}}
- 
  
 %if False
  
@@ -129,10 +128,7 @@
                    \fbox{$e \to e'$} \\
                    \\
                    \begin{array}{c}
-                       \infer[_{(Const_1)}]
-                             {n \to n}
-                             {} \\ \\
-                       \infer[_{(Const_2)}]
+                       \infer[_{(Const)}]
                              {n + n' \to n \oplus n'}
                              {} \\ \\
                        \infer[_{(AddL)}]
@@ -244,12 +240,13 @@
 >     in smallStep (e1 :+: e2)
  
   \end{frame}
+
 % end of slides, just code from now on...
 %if False
- 
+
 > sumVal :: Value -> Value -> Value
 > sumVal v v' = Value (unValue v + unValue v')
-
+ 
 > lexer = Token.makeTokenParser haskellDef
 > integer = Token.integer lexer
 
@@ -287,6 +284,6 @@
 > finish :: Exp -> Either ParseError Integer -> IO ()
 > finish _ (Left err) = print err
 > finish e (Right n) = if n == 1 then print (bigStep e) else either print print (smallStep e)
- 
+
 %endif
 \end{document}

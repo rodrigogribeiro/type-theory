@@ -1,0 +1,467 @@
+\documentclass{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath,amsfonts,amssymb,amsthm}
+\usepackage{proof}
+\usepackage{color}
+ 
+\usetheme{Luebeck}
+ 
+\title{Introdução ao $\lambda$-Cálculo Atipado}
+\subtitle{Teoria de Tipos}
+\author[Prof. Rodrigo Ribeiro]{Prof. Rodrigo Ribeiro}
+\institute{Departamento de Computação e Sistemas}
+\date{\today}
+
+%% ODER: format ==         = "\mathrel{==}"
+%% ODER: format /=         = "\neq "
+%
+%
+\makeatletter
+\@ifundefined{lhs2tex.lhs2tex.sty.read}%
+  {\@namedef{lhs2tex.lhs2tex.sty.read}{}%
+   \newcommand\SkipToFmtEnd{}%
+   \newcommand\EndFmtInput{}%
+   \long\def\SkipToFmtEnd#1\EndFmtInput{}%
+  }\SkipToFmtEnd
+
+\newcommand\ReadOnlyOnce[1]{\@ifundefined{#1}{\@namedef{#1}{}}\SkipToFmtEnd}
+\usepackage{amstext}
+\usepackage{amssymb}
+\usepackage{stmaryrd}
+\DeclareFontFamily{OT1}{cmtex}{}
+\DeclareFontShape{OT1}{cmtex}{m}{n}
+  {<5><6><7><8>cmtex8
+   <9>cmtex9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmtex10}{}
+\DeclareFontShape{OT1}{cmtex}{m}{it}
+  {<-> ssub * cmtt/m/it}{}
+\newcommand{\texfamily}{\fontfamily{cmtex}\selectfont}
+\DeclareFontShape{OT1}{cmtt}{bx}{n}
+  {<5><6><7><8>cmtt8
+   <9>cmbtt9
+   <10><10.95><12><14.4><17.28><20.74><24.88>cmbtt10}{}
+\DeclareFontShape{OT1}{cmtex}{bx}{n}
+  {<-> ssub * cmtt/bx/n}{}
+\newcommand{\tex}[1]{\text{\texfamily#1}}	% NEU
+
+\newcommand{\Sp}{\hskip.33334em\relax}
+
+
+\newcommand{\Conid}[1]{\mathit{#1}}
+\newcommand{\Varid}[1]{\mathit{#1}}
+\newcommand{\anonymous}{\kern0.06em \vbox{\hrule\@width.5em}}
+\newcommand{\plus}{\mathbin{+\!\!\!+}}
+\newcommand{\bind}{\mathbin{>\!\!\!>\mkern-6.7mu=}}
+\newcommand{\rbind}{\mathbin{=\mkern-6.7mu<\!\!\!<}}% suggested by Neil Mitchell
+\newcommand{\sequ}{\mathbin{>\!\!\!>}}
+\renewcommand{\leq}{\leqslant}
+\renewcommand{\geq}{\geqslant}
+\usepackage{polytable}
+
+%mathindent has to be defined
+\@ifundefined{mathindent}%
+  {\newdimen\mathindent\mathindent\leftmargini}%
+  {}%
+
+\def\resethooks{%
+  \global\let\SaveRestoreHook\empty
+  \global\let\ColumnHook\empty}
+\newcommand*{\savecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\savecolumns[#1]}}
+\newcommand*{\restorecolumns}[1][default]%
+  {\g@addto@macro\SaveRestoreHook{\restorecolumns[#1]}}
+\newcommand*{\aligncolumn}[2]%
+  {\g@addto@macro\ColumnHook{\column{#1}{#2}}}
+
+\resethooks
+
+\newcommand{\onelinecommentchars}{\quad-{}- }
+\newcommand{\commentbeginchars}{\enskip\{-}
+\newcommand{\commentendchars}{-\}\enskip}
+
+\newcommand{\visiblecomments}{%
+  \let\onelinecomment=\onelinecommentchars
+  \let\commentbegin=\commentbeginchars
+  \let\commentend=\commentendchars}
+
+\newcommand{\invisiblecomments}{%
+  \let\onelinecomment=\empty
+  \let\commentbegin=\empty
+  \let\commentend=\empty}
+
+\visiblecomments
+
+\newlength{\blanklineskip}
+\setlength{\blanklineskip}{0.66084ex}
+
+\newcommand{\hsindent}[1]{\quad}% default is fixed indentation
+\let\hspre\empty
+\let\hspost\empty
+\newcommand{\NB}{\textbf{NB}}
+\newcommand{\Todo}[1]{$\langle$\textbf{To do:}~#1$\rangle$}
+
+\EndFmtInput
+\makeatother
+%
+%
+%
+%
+%
+%
+% This package provides two environments suitable to take the place
+% of hscode, called "plainhscode" and "arrayhscode". 
+%
+% The plain environment surrounds each code block by vertical space,
+% and it uses \abovedisplayskip and \belowdisplayskip to get spacing
+% similar to formulas. Note that if these dimensions are changed,
+% the spacing around displayed math formulas changes as well.
+% All code is indented using \leftskip.
+%
+% Changed 19.08.2004 to reflect changes in colorcode. Should work with
+% CodeGroup.sty.
+%
+\ReadOnlyOnce{polycode.fmt}%
+\makeatletter
+
+\newcommand{\hsnewpar}[1]%
+  {{\parskip=0pt\parindent=0pt\par\vskip #1\noindent}}
+
+% can be used, for instance, to redefine the code size, by setting the
+% command to \small or something alike
+\newcommand{\hscodestyle}{}
+
+% The command \sethscode can be used to switch the code formatting
+% behaviour by mapping the hscode environment in the subst directive
+% to a new LaTeX environment.
+
+\newcommand{\sethscode}[1]%
+  {\expandafter\let\expandafter\hscode\csname #1\endcsname
+   \expandafter\let\expandafter\endhscode\csname end#1\endcsname}
+
+% "compatibility" mode restores the non-polycode.fmt layout.
+
+\newenvironment{compathscode}%
+  {\par\noindent
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed\)%
+   \par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\compaths}{\sethscode{compathscode}}
+
+% "plain" mode is the proposed default.
+% It should now work with \centering.
+% This required some changes. The old version
+% is still available for reference as oldplainhscode.
+
+\newenvironment{plainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\hspre\(\let\hspost\)%
+   \pboxed}%
+  {\endpboxed%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newenvironment{oldplainhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+% Here, we make plainhscode the default environment.
+
+\newcommand{\plainhs}{\sethscode{plainhscode}}
+\newcommand{\oldplainhs}{\sethscode{oldplainhscode}}
+\plainhs
+
+% The arrayhscode is like plain, but makes use of polytable's
+% parray environment which disallows page breaks in code blocks.
+
+\newenvironment{arrayhscode}%
+  {\hsnewpar\abovedisplayskip
+   \advance\leftskip\mathindent
+   \hscodestyle
+   \let\\=\@normalcr
+   \(\parray}%
+  {\endparray\)%
+   \hsnewpar\belowdisplayskip
+   \ignorespacesafterend}
+
+\newcommand{\arrayhs}{\sethscode{arrayhscode}}
+
+% The mathhscode environment also makes use of polytable's parray 
+% environment. It is supposed to be used only inside math mode 
+% (I used it to typeset the type rules in my thesis).
+
+\newenvironment{mathhscode}%
+  {\parray}{\endparray}
+
+\newcommand{\mathhs}{\sethscode{mathhscode}}
+
+% texths is similar to mathhs, but works in text mode.
+
+\newenvironment{texthscode}%
+  {\(\parray}{\endparray\)}
+
+\newcommand{\texths}{\sethscode{texthscode}}
+
+% The framed environment places code in a framed box.
+
+\def\codeframewidth{\arrayrulewidth}
+\RequirePackage{calc}
+
+\newenvironment{framedhscode}%
+  {\parskip=\abovedisplayskip\par\noindent
+   \hscodestyle
+   \arrayrulewidth=\codeframewidth
+   \tabular{@{}|p{\linewidth-2\arraycolsep-2\arrayrulewidth-2pt}|@{}}%
+   \hline\framedhslinecorrect\\{-1.5ex}%
+   \let\endoflinesave=\\
+   \let\\=\@normalcr
+   \(\pboxed}%
+  {\endpboxed\)%
+   \framedhslinecorrect\endoflinesave{.5ex}\hline
+   \endtabular
+   \parskip=\belowdisplayskip\par\noindent
+   \ignorespacesafterend}
+
+\newcommand{\framedhslinecorrect}[2]%
+  {#1[#2]}
+
+\newcommand{\framedhs}{\sethscode{framedhscode}}
+
+% The inlinehscode environment is an experimental environment
+% that can be used to typeset displayed code inline.
+
+\newenvironment{inlinehscode}%
+  {\(\def\column##1##2{}%
+   \let\>\undefined\let\<\undefined\let\\\undefined
+   \newcommand\>[1][]{}\newcommand\<[1][]{}\newcommand\\[1][]{}%
+   \def\fromto##1##2##3{##3}%
+   \def\nextline{}}{\) }%
+
+\newcommand{\inlinehs}{\sethscode{inlinehscode}}
+
+% The joincode environment is a separate environment that
+% can be used to surround and thereby connect multiple code
+% blocks.
+
+\newenvironment{joincode}%
+  {\let\orighscode=\hscode
+   \let\origendhscode=\endhscode
+   \def\endhscode{\def\hscode{\endgroup\def\@currenvir{hscode}\\}\begingroup}
+   %\let\SaveRestoreHook=\empty
+   %\let\ColumnHook=\empty
+   %\let\resethooks=\empty
+   \orighscode\def\hscode{\endgroup\def\@currenvir{hscode}}}%
+  {\origendhscode
+   \global\let\hscode=\orighscode
+   \global\let\endhscode=\origendhscode}%
+
+\makeatother
+\EndFmtInput
+%
+
+\DeclareMathAlphabet{\mathkw}{OT1}{cmss}{bx}{n}
+
+
+\newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
+\newcommand{\greenFG}[1]{\textcolor[rgb]{0,0.4,0}{#1}}
+\newcommand{\blueFG}[1]{\textcolor[rgb]{0,0,0.8}{#1}}
+\newcommand{\orangeFG}[1]{\textcolor[rgb]{0.8,0.4,0}{#1}}
+\newcommand{\purpleFG}[1]{\textcolor[rgb]{0.4,0,0.4}{#1}}
+\newcommand{\yellowFG}[1]{\textcolor{yellow}{#1}}
+\newcommand{\brownFG}[1]{\textcolor[rgb]{0.5,0.2,0.2}{#1}}
+\newcommand{\blackFG}[1]{\textcolor[rgb]{0,0,0}{#1}}
+\newcommand{\whiteFG}[1]{\textcolor[rgb]{1,1,1}{#1}}
+\newcommand{\yellowBG}[1]{\colorbox[rgb]{1,1,0.2}{#1}}
+\newcommand{\brownBG}[1]{\colorbox[rgb]{1.0,0.7,0.4}{#1}}
+
+\newcommand{\ColourStuff}{
+  \newcommand{\red}{\redFG}
+  \newcommand{\green}{\greenFG}
+  \newcommand{\blue}{\blueFG}
+  \newcommand{\orange}{\orangeFG}
+  \newcommand{\purple}{\purpleFG}
+  \newcommand{\yellow}{\yellowFG}
+  \newcommand{\brown}{\brownFG}
+  \newcommand{\black}{\blackFG}
+  \newcommand{\white}{\whiteFG}
+}
+
+\ColourStuff
+
+\newcommand{\D}[1]{\blue{\mathsf{#1}}}
+\newcommand{\C}[1]{\green{\mathsf{#1}}}
+\newcommand{\F}[1]{\green{\mathsf{#1}}}
+\newcommand{\V}[1]{\blue{\mathit{#1}}}
+\newcommand{\N}[1]{\purple{\mathit{#1}}}
+\newcommand{\K}[1]{\red{\mathkw{#1}}}
+
+ 
+\begin{document}
+   \begin{frame}
+       \titlepage
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (I)}
+      \begin{block}{O $\lambda$-cálculo}
+         \begin{itemize}
+            \item Sistema formal capaz de representar qualquer função computável.
+            \item Pode ser vista como linguagem de programação mínima.
+            \item Inicialmente concebida para uso em lógica.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (II)}
+      \begin{block}{Sintaxe}
+         \[
+             \begin{array}{rcll}
+                t & ::= & x & \text{variável} \\
+                  &     & \lambda x. t & \text{abstração}\\
+                  &     & t\:t & \text{aplicação}
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (III)}
+      \begin{block}{Escopo}
+         \begin{itemize}
+            \item Variável ligada: $x$ é ligada se ocorre no termo $t$ em $\lambda x.t$.
+            \item Variável livre: $x$ é livre se não ocorre no escopo de uma abstração envolvendo $x$.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (IV)}
+      \begin{block}{Semântica Operacional}
+         \begin{itemize}
+            \item Elemento fundamental: substituição.
+            \[
+                 (\lambda x.t_1)\: t_2 \to [x \mapsto t_2]\:t_1
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (V)}
+      \begin{block}{Representando Booleanos}
+         \[
+             \begin{array}{lcl}
+                true & = & \lambda t. \lambda f. t\\
+                false & = & \lambda t. \lambda f. f\\
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (VI)}
+      \begin{block}{Funções sobre Booleanos}
+         \[
+             \begin{array}{lcl}
+                not & = & \lambda x . x\: false\: true
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (VII)}
+      \begin{block}{Exemplo}
+         \[
+             \begin{array}{lc}
+                not\:\: true & = \\
+                (\lambda x .\, x\: false\: true)\: true & = \\
+                true\:\: false\:\: true & = \\
+                (\lambda t. \lambda f. t)\: false\: true & = \\
+                \lambda f. false & = \\
+                false & = \\
+                \lambda t. \lambda f. f
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (VIII)}
+      \begin{block}{Representando números}
+         \[
+             \begin{array}{lcl}
+                0 & = & \lambda s. \lambda z. z \\
+                1 & = & \lambda s. \lambda z. s\: z \\
+                  & ... & \\
+                suc & = & \lambda n. \lambda s. \lambda z. s (n\:\:s\:\:z)
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (IX)}
+      \begin{block}{Operações sobre números}
+         \[
+             \begin{array}{lcl}
+                plus & = & \lambda m.\lambda n.\lambda n.\lambda z. m\:\:s\:\:(n\:\:s\:\:z)\\
+                times & = & \lambda m.\lambda n. m\:\:(plus\:\:n)\:\:0\\
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (X)}
+      \begin{block}{Formalidades}
+         \begin{itemize}
+            \item Cálculo de variáveis livres
+            \[
+                \begin{array}{lcl}
+                   fv(x) & = & \{x\}\\
+                   fv(\lambda x.t_1) & = & fv(t_1) - \{x\}\\
+                   fv(t_1\:\:t_2) & = & fv(t_1) \cup fv(t_2)\\
+                \end{array}
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XI)}
+      \begin{block}{Substituição}
+           \[
+               \begin{array}{lcll}
+                  {[x \mapsto s]}\:x               & = & s                              & \\
+                  {[x \mapsto s]}\:y               & = & y                              & x \neq y\\
+                  {[x \mapsto s]}\:(\lambda y.t_1) & = & \lambda y. {[x \mapsto s]}\: t_1 & y \neq x \land y \not\in fv(s)\\
+                  {[x \mapsto s]}\:(t_1\:\:t_2)    & = & ({[x\mapsto s]}\:t_1)({[x\mapsto s]}\:t_2)\\
+               \end{array}
+           \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo --- (XII)}
+      \begin{block}{Alguns conceitos...}
+         \begin{itemize}
+            \item Captura de variável.
+            \item Termos fechados, termos $\alpha$-equivalentes.
+            \item Valores: $\lambda$-abstrações.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo --- (XIII)}
+      \begin{block}{Semântica Operacional}
+          \[
+              \begin{array}{c}
+                  \fbox{$t\to t'$}\\ \\
+                  \begin{array}{c}
+                     \infer[_{(EAppAbs)}]
+                           {\lambda x. t_{12}\:v_2 \to [x\mapsto v_2]\:t_{12}}
+                           {} \\ \\
+                     \infer[_{(EApp_1)}]
+                           {t_1\:\:t_2\to t'_1\:\:t_2}
+                           {t_1\to t'_1} \\ \\
+                     \infer[_{(EApp_2)}]
+                           {v_1\:\:t_2\to v_1\:\:t'_2}
+                           {t_2 \to t'_2}
+                  \end{array}
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+\end{document}
