@@ -13,3 +13,5 @@ clean:
 	rm *.aux
 	rm *.snm
 	rm *.toc
+	rm *.out
+	rm *.ptb

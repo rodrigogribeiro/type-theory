@@ -1,3 +1,8 @@
 *.pdf
 *.hi
 .DS_Store
+*.log
+*.nav
+*.aux
+*.snm
+*.toc
