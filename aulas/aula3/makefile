@@ -1,12 +1,12 @@
 default: pdf
 
 pdf:
-	lhs2TeX --haskell Main.lhs -o aula2.tex
-	pdflatex aula2.tex
-	pdflatex aula2.tex
+	lhs2TeX --haskell Main.lhs -o aula3.tex
+	pdflatex aula3.tex
+	pdflatex aula3.tex
 
 clean:
-	rm aula2.tex
+	rm aula3.tex
 	rm *.pdf
 	rm *.log
 	rm *.nav

@@ -24,6 +24,8 @@
 %subst varid a = "\V{" a "}"
 %subst numeral a = "\N{" a "}"
 
+%options ghci
+
 %format :+: = "\C{\:\oplus\:}"
 
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
@@ -196,7 +198,7 @@
            \]
       \end{block}
    \end{frame}
-   \begin{frame}{$\lambda$-Cálculo --- (XII)}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XII)}
       \begin{block}{Alguns conceitos...}
          \begin{itemize}
             \item Captura de variável.
@@ -205,7 +207,7 @@
          \end{itemize}
       \end{block}
    \end{frame}
-   \begin{frame}{$\lambda$-Cálculo --- (XIII)}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XIII)}
       \begin{block}{Semântica Operacional}
           \[
               \begin{array}{c}
@@ -223,6 +225,32 @@
                   \end{array}
               \end{array}
           \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XIV)}
+      \begin{block}{Implementando a sintaxe}
+
+> data LTerm = LVar String
+>            | LLam String LTerm
+>            | LApp LTerm LTerm
+>            deriving (Eq, Ord, Show)
+
+      \end{block}
+   \end{frame}
+
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XV)}
+      \begin{block}{Termos $\alpha$-equivalentes}
+         \begin{itemize}
+            \item Termos equivalentes: $\lambda x. x$ e $\lambda y.y$.
+
+> t1 = LLam "x" (LVar "x")
+> t2 = LLam "y" (LVar "y")
+
+            \item Mas o teste de igualdade gerado pelo GHC não corresponde a isso,
+                  pois o resultado de |t1 == t2| é \eval{t1 == t2}.
+            \item Ideal: Termos $\alpha$-equivalentes reconhecidos pelo
+                  teste de igualdade de Haskell.
+         \end{itemize}
       \end{block}
    \end{frame}
 \end{document}
