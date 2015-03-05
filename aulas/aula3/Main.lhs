@@ -322,5 +322,29 @@
       \end{block}
    \end{frame}
    \begin{frame}{$\lambda$-Cálculo Atipado --- (XXII)}
+      \begin{block}{Índices DeBruijn}
+         \begin{itemize}
+            \item Resolvem facilmente o problema de testar $\alpha$-equivalência.
+            Igualdade sintática (implementada por Haskell) identifica tais termos.
+           \item Mas, como lidar com variáveis livres? Como converter termos para DeBruijn e vice-versa?
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXII)}
+      \begin{block}{Contextos de nomes}
+         \begin{itemize}
+            \item Função finita de nomes em índices. Utilizado para converter
+                  termos com nomes para notação DeBruijn e vice-versa.
+            \item Exemplo: $\Delta =\{x\mapsto 2, y\mapsto 1, z \mapsto 0\}$. Então, o termo
+                  $2\:(1\:0)$ representa $x\,(y\:z)$.
+            \item Podemos usar uma lista de nomes e a posição destes como seu índice. Com isso,
+                  o contexto reduz-se a uma lista ao invés de uma função finita.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXIII)}
+      \begin{block}{Convertendo entre notações}
+ 
+      \end{block}
    \end{frame}
 \end{document}
