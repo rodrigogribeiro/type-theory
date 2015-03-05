@@ -6,3 +6,6 @@
 *.aux
 *.snm
 *.toc
+*.ptb
+*.out
+*.tex

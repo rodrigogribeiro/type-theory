@@ -253,4 +253,74 @@
          \end{itemize}
       \end{block}
    \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XVI)}
+      \begin{block}{Substituição}
+         \begin{itemize}
+             \item Outro problema, é a implementação de substituição.
+             \item Como implementá-la evitando o problema de captura de variáveis?
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XVII)}
+      \begin{block}{Substituição}
+         \begin{itemize}
+            \item Existem várias técnicas na literatura para o problema de captura de variáveis em substituições.
+            \begin{itemize}
+                \item Índices DeBruijn
+                \item High Order Abstract Syntax
+                \item Locally Nameless Representation
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XVIII)}
+      \begin{block}{Índices DeBruijn}
+          \begin{itemize}
+             \item Utilizaremos esta técnica neste curso.
+             \item Porquê? Se implementada incorretamente,
+                   esta falha de maneira catastrófica, ao
+                   invés de situações específicas.
+             \item Termos $\alpha$-equivalentes são sintaticamente iguais.
+          \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XIX)}
+      \begin{block}{Índices DeBruijn}
+         \begin{itemize}
+            \item Idéia: Representar variáveis como a distância da variável ao $\lambda$ correspondente.
+            \item Exemplos:
+            \[
+                \begin{array}{ll}
+                   \hline
+                   \text{Termos} & \text{DeBruijn}\\ \hline
+                   \lambda x . x & \lambda . 0    \\
+                   \lambda x . \lambda y. y x & \lambda . \lambda . 0\:1\\
+                \end{array}
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XX)}
+      \begin{block}{Definição formal de termos DeBruijn}
+        Denominamos por $\mathcal{T}_n$, $n\in\mathbb{N}$, a família de conjuntos $\{\mathcal{T}_0,\mathcal{T}_1...\}$, em que cada $\mathcal{T}_i$,
+        $0 \leq i < n$:
+        \[
+            \begin{array}{ll}
+               k \in \mathcal{T}_n, & 0 \leq k < n ; \\
+               \text{se }t\in \mathcal{T}_{n} \text{ então}&\lambda.t\in\mathcal{T}_{n - 1} ; \\
+               \text{se }t,t'\in \mathcal{T}_{n} \text{ então}&t\:t'\in\mathcal{T}_{n - 1} ; \\
+            \end{array}
+        \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXI)}
+      \begin{block}{Significado dos conjuntos $\mathcal{T}_n$}
+         \begin{itemize}
+            \item Elementos de $\mathcal{T}_n$ são termos com no máximo $n\in\mathbb{N}$ variáveis livres.
+            \item Conjunto $\mathcal{T}_0$: conjunto de termos fechados.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXII)}
+   \end{frame}
 \end{document}
