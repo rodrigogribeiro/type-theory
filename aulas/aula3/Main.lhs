@@ -343,8 +343,38 @@
       \end{block}
    \end{frame}
    \begin{frame}{$\lambda$-Cálculo Atipado --- (XXIII)}
-      \begin{block}{Convertendo entre notações}
- 
+      \begin{block}{Substituição sobre DeBruijn índices}
+         \begin{itemize}
+            \item Necessário uma operação auxiliar: shifting.
+            \item Finalidade: incrementar índices de variáveis livres a cada $\lambda$.
+            \[
+                \begin{array}{lcl}
+                   \uparrow^d_c(k) & = & \left\{
+                                            \begin{array}{ll}
+                                               k & \text{se }k < c.\\
+                                               k+d & \text{caso contrário}.
+                                            \end{array}
+                                         \right. \\
+                   \uparrow^d_c(\lambda.t) & = & \lambda . \uparrow^d_{c+1}(t)\\
+                   \uparrow^d_c(t\:\:t') & = & \uparrow^d_c(t)\:\:\uparrow^d_c(t')
+                \end{array}
+            \]
+            \item Notação: $\uparrow^d(t) = \uparrow^d_0(t)$
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXIV)}
+      \begin{block}{Shifting --- Exemplo}
+          \[
+              \begin{array}{lc}
+                 \uparrow^2_0(\lambda.\lambda.1\:(0\:2)) & = \\
+                 \lambda.\uparrow^2_1(\lambda.1\:(0\:2)) & = \\
+                 \lambda.\lambda.\uparrow^2_2(1\:(0\:2)) & = \\
+                 \lambda.\lambda.\uparrow^2_2(1)\:\uparrow^2_2(0\:2) & =\\
+                 \lambda.\lambda.1\:(\uparrow^2_2(0)\:\uparrow^2_2(2)) & =\\
+                 \lambda.\lambda.1\:(0\:4)
+              \end{array}
+          \]
       \end{block}
    \end{frame}
 \end{document}
