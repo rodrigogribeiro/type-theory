@@ -377,4 +377,91 @@
           \]
       \end{block}
    \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXV)}
+      \begin{block}{Substituição}
+         \[
+            \begin{array}{lcl}
+               \lbrack j\mapsto t' \rbrack\:k & = & \left\{
+                                         \begin{array}{ll}
+                                            t' & \text{se }k = j\\
+                                            k  & \text{caso contrário}\\
+                                         \end{array}
+                                      \right.\\
+              \lbrack j\mapsto t' \rbrack \:(\lambda.t) & = & \lambda. \lbrack j + 1 \mapsto \uparrow^1(t')\rbrack\:t\\
+              \lbrack j\mapsto t'\rbrack (t_1\: t_2) & = & (\lbrack j\mapsto t'\rbrack\: t_1)\:(\lbrack j\mapsto t'\rbrack\: t_2)
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXVI)}
+      \begin{block}{Substituição --- Exemplo}
+         $[x\mapsto \lambda z. z\: w]\:(\lambda y. x)$
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXVII)}
+      \begin{block}{Avaliação --- $\beta$-redução}
+          \[ (\lambda t.)\:v \Rightarrow \uparrow^{-1}(\lbrack 0\mapsto\uparrow^{1}(v) \rbrack \:t) \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXVIII)}
+      \begin{block}{Sintaxe de termos DeBruijn}
+
+> data DBTerm =
+>   DBVar Int |
+>   DBAbs DBTerm |
+>   DBApp DBTerm DBTerm
+>   deriving (Eq, Ord)
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXIX)}
+      \begin{block}{Implementando Shifting}
+
+> shift' :: Int -> Int -> DBTerm -> DBTerm
+> shift' d c (DBVar k) = DBVar (if k >= c then d + k else k)
+> shift' d c (DBAbs t) = DBAbs (shift' d (c + 1) t)
+> shift' d c (DBApp t t') = DBApp (shift' d c t) (shift' d c t')
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXX)}
+      \begin{block}{Implementando Shifting}
+
+> shift :: Int -> DBTerm -> DBTerm
+> shift d t = shift' d 0 t
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXX)}
+      \begin{block}{Implementando a substituição}
+
+> subst' :: Int -> DBTerm -> DBTerm -> DBTerm
+> subst' j t' v@(DBVar k) = if k == j then t' else v
+> subst' j t' a@(DBAbs t) = DBAbs (subst' (j + 1) (shift 1 t') t)
+> subst' j t' a@(DBApp l r) = DBApp (subst' j t' l) (subst' j t' r)
+ 
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXXI)}
+      \begin{block}{Implementando a substituição}
+
+> subst :: DBTerm -> DBTerm -> DBTerm
+> subst t' = shift (-1) . subst' 0 (shift 1 t')
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXXII)}
+      \begin{block}{Implementando a avaliação}
+
+> value :: DBTerm -> Bool
+> value (DBAbs _) = True
+> value _         = False
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXXIII)}
+      \begin{block}{Implementando a avaliação}
+
+      \end{block}
+   \end{frame}
 \end{document}

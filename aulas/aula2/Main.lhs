@@ -236,8 +236,7 @@
 >     in smallStep ((Const v) :+: e)
 > smallStep (e :+: e') =
 >     let e1 = either id Const (smallStep e)
->         e2 = either id Const (smallStep e')
->     in smallStep (e1 :+: e2)
+>     in smallStep (e1 :+: e')
  
   \end{frame}
 
