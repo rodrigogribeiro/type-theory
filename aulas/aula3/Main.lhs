@@ -462,6 +462,25 @@
    \begin{frame}{$\lambda$-Cálculo Atipado --- (XXXIII)}
       \begin{block}{Implementando a avaliação}
 
+> eval' :: DBTerm -> Maybe DBTerm
+> eval' v@(DBApp (DBAbs t) t')
+>           | value t' = Just (subst t' t)
+>           | otherwise = Nothing
+> eval' (DBApp t t')
+>           | value t = maybe undefined (Just . DBApp t)
+>                                       (eval' t')
+>           | otherwise = maybe undefined (Just . flip DBApp t') (eval' t)
+> eval' _ = Nothing
+
+      \end{block}
+   \end{frame}
+
+   \begin{frame}{$\lambda$-Cálculo Atipado --- (XXXIV)}
+      \begin{block}{Implementando a avaliação}
+
+> eval :: DBTerm -> DBTerm
+> eval t = maybe t eval (eval' t)
+
       \end{block}
    \end{frame}
 \end{document}
