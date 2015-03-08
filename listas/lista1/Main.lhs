@@ -158,6 +158,7 @@ Prove que para todo |t :: Term a|, |length (fv t)| $\leq$ |size t|.
       \begin{enumerate}
           \item Seus resultados devem ser entregues como um arquivo .lhs que pode ser processado pelo pré processador lhs2\TeX~ para
                 gerar um pdf contendo suas respostas. Como exemplo de código, utilize o fonte desta lista.
+          \item O uso de makefile é obrigatório.
           \item Pode-se instalar o lhs2\TeX~ usando os seguintes comandos
 \begin{center}
 \verb|cabal update|\\
