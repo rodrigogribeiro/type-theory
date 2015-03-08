@@ -71,7 +71,7 @@
 {\it Teoria de Tipos}
  \hfill $\mbox{1}^{\mbox{\underline{o}}}$ semestre de 2015 \\
 Professor: \parbox[t]{14cm}{Rodrigo Geraldo Ribeiro \\
-                     e-mail: rodrigo em decsi.ufop.br}
+                     e-mail: rodrigo em decsi.ufop.br}\\
 
 \noindent {\bf Lista de Exerc\'icios 1} \hfill {\bf Tema: Semântica Operacional e $\lambda$-Cálculo Atipado}
 
@@ -93,7 +93,7 @@ Professor: \parbox[t]{14cm}{Rodrigo Geraldo Ribeiro \\
         \end{array}
   \]
   \begin{enumerate}
-      \item Apresenta uma definição adequada do que seriam valores
+      \item Apresente uma definição adequada do que seriam valores
         para esta linguagem.
       \item Apresente uma semântica operacional small step para
         esta linguagem.
@@ -115,7 +115,7 @@ Professor: \parbox[t]{14cm}{Rodrigo Geraldo Ribeiro \\
        Haskell e permita que o usuário escolha entre utilizar a
        semântica small-step ou big-step definida por
        você. Evidentemente, você deverá implementar duas funções de
-       interpretação: uma para cada semântica definida por você.
+       interpretação: uma para cada semântica definida.
   \end{enumerate}
   \item Considerando a representação de números naturais e valores
     booleanos no $\lambda$-cálculo, faça o que se pede:
@@ -151,14 +151,18 @@ Prove que para todo |t :: Term a|, |length (fv t)| $\leq$ |size t|.
       \item Implemente um interpretador para o $\lambda$-cálculo atipado. Seu interpretador deve fornecer um prompt de
             comando que permita ao usuário entrar com $\lambda$-termos que serão interpretados utilizando índices DeBruijn.
             Evidentemente, seu interpretador deve apresentar como resultado uma forma normal, caso esta exista. Além disso,
-            visando facilitar a legibilidade de seus resultados, você deve utilizar índices DeBruijn internamente ao seu interpretador, isto é,
-            antes de apresentar um resultado, você deverá converter termos usando índices DeBruijn para termos usando nomes.
+            visando facilitar a legibilidade de seus resultados, ao exibí-los você deve utilizar nomes ao invés de índices DeBruijn.
       \item[\ ]
       \item[\ ]
       \item[\ ] Algumas observações importantes:
       \begin{enumerate}
-          \item Seus resultados devem ser entregues como um arquivo .lhs que pode ser processado pelo pré processador lhs2TeX para
-                gerar um pdf contendo suas respostas. Como exemplo, utilize esta lista.
+          \item Seus resultados devem ser entregues como um arquivo .lhs que pode ser processado pelo pré processador lhs2\TeX~ para
+                gerar um pdf contendo suas respostas. Como exemplo de código, utilize o fonte desta lista.
+          \item Pode-se instalar o lhs2\TeX~ usando os seguintes comandos
+\begin{center}
+\verb|cabal update|\\
+\verb|cabal install lhs2TeX|
+\end{center}
           \item Prazo para entrega improrrogável: 27/03/2014.
       \end{enumerate}
    \end{enumerate}
