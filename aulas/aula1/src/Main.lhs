@@ -60,7 +60,7 @@ Interpretador --- (IV)
 Interpretador --- (V)
 =====================
 
-- Matemáticamente, o estado de um programa nada mais é que uma palavra e um posição desta,
+- Matematicamente, o estado de um programa nada mais é que uma palavra e um posição desta,
   isto é: $\langle w , i \rangle$, em que $w$ é uma sequência infinita de bytes e $i$ a
   posição atual.
 - Outra maneira equivalente: $\langle l\underline{x}r\rangle$, em que:
@@ -96,8 +96,8 @@ Interpretador --- (IX)
 - Estrutura sintática
 
 > data Cmd = ML | MR | Inc | Dec
->          | Pr | Rd | LL  | LR
->          deriving (Eq, Ord)
+>          | Pr | Rd | Block [Cmd]
+>          deriving (Eq, Ord, Show)
 
 
 Interpretador --- (X)
@@ -108,23 +108,28 @@ Interpretador --- (X)
 > pProgram :: Parser [Cmd]
 > pProgram = nop *> many (between nop nop pins)
 
-> nop :: Parser String
-> nop = many (noneOf ops) <?> "nop"
+> nop :: Parser ()
+> nop = many (noneOf ops) *> return ()
 
 
 Interpretador --- (XI)
 ======================
 
--- Análise sintática
+- Análise sintática
 
 > pins :: Parser Cmd
-> pins = choice list
+> pins = (Block <$> between open close pProgram)
+>        <|> single
+>        where
+>          open = char '['
+>          close = char ']'
 
-> list = map f table
+> single :: Parser Cmd
+> single = choice (map f table)
 >        where
 >          f (c,t) = const t <$> char c
 
-> table = zip ops [ML, MR,Inc,Dec,Pr,Rd,LL,LR]
+> table = zip ops [ML, MR,Inc,Dec,Pr,Rd]
 
 > ops :: String
 > ops = "<>+-.,[]"
@@ -256,27 +261,12 @@ Interpretador --- (XXII)
 
 - Executando comandos individuais
 
-> loopLeft :: Program -> BF Program
-> loopLeft e@(Conf lp LL rp)
->             = do
->                b <- gets current
->                if b == 0 then moveUntil LR e
->                  else nextCmd e
-> loopLeft (Conf{} ) = error "Impossible!"
-
 
 Interpretador --- (XXIII)
 =======================
 
 - Executando comandos individuais
 
-> loopRight :: Program -> BF Program
-> loopRight e@(Conf lp LR rp)
->             = do
->                b <- gets current
->                if b /= 0 then moveUntil LL e
->                 else nextCmd e
-> loopRight (Conf{} ) = error "Impossible!"
 
 
 Interpretador --- (XXIV)
@@ -294,16 +284,6 @@ Interpretador --- (XXV)
 
 - Executar comandos individuais
 
-> moveUntil :: Cmd -> Program -> BF Program
-> moveUntil LL c@(Conf [] _ _) = return c
-> moveUntil LL (Conf (l:lp) c rp)
->        = if l == LL then return (Conf lp LL (c : rp))
->            else moveUntil LL (Conf lp LL (c:rp))
-> moveUntil LR c@(Conf [] _ _) = return c
-> moveUntil LR (Conf lp c (r:rp))
->        = if r == LR then return (Conf (c:lp) r rp)
->            else moveUntil LR (Conf (c:lp) r rp)
-> moveUtil _ _ = error "Impossible!"
 
 Interpretador --- (XXVI)
 ========================
@@ -317,8 +297,7 @@ Interpretador --- (XXVI)
 > exec c@(Conf ls Dec rs) = modify decr >> next c
 > exec c@(Conf ls Pr rs) = get >>= iprint >> next c
 > exec c@(Conf ls Rd rs) = get >>= iread >> next c
-> exec c@(Conf ls LL rs) = loopLeft c
-> exec c@(Conf ls LR rs) = loopRight c
+> exec c@(Conf ls (Block cs) rs) = undefined
 
 Interpretador --- (XXVII)
 ===========================
@@ -366,13 +345,3 @@ Interpretador --- (XXX)
 =======================
 
 - Instância de show
-
-> instance Show Cmd where
->    show ML = "<"
->    show MR = ">"
->    show Inc = "+"
->    show Dec = "-"
->    show Pr  = "."
->    show Rd  = ","
->    show LL  = "["
->    show LR  = "]"
