@@ -97,7 +97,7 @@ Interpretador --- (IX)
 
 > data Cmd = ML | MR | Inc | Dec
 >          | Pr | Rd | Block [Cmd]
->          deriving (Eq, Ord, Show)
+>          deriving (Eq, Ord)
 
 
 Interpretador --- (X)
@@ -118,11 +118,12 @@ Interpretador --- (XI)
 - Análise sintática
 
 > pins :: Parser Cmd
-> pins = (Block <$> between open close pProgram)
+> pins = ((Block <$> between open close pProgram) <?> loop)
 >        <|> single
 >        where
 >          open = char '['
 >          close = char ']'
+>          loop = "Unmatched loop construct."
 
 > single :: Parser Cmd
 > single = choice (map f table)
@@ -261,15 +262,18 @@ Interpretador --- (XXII)
 
 - Executando comandos individuais
 
+> loop :: Program -> BF Program
+> loop c@(Conf _ (Block []) _) = nextCmd c
+> loop c@(Conf ls b@(Block (x:xs)) rs)
+>      = do
+>          k <- gets current
+>          liftIO (putStrLn "aqui")
+>          if k == 0 then nextCmd c
+>            else return (Conf (b : ls) x (xs ++ rs))
+> loop (Conf _ _ _) = error "Impossible!"
+
 
 Interpretador --- (XXIII)
-=======================
-
-- Executando comandos individuais
-
-
-
-Interpretador --- (XXIV)
 =========================
 
 - Executando comandos individuais
@@ -279,13 +283,7 @@ Interpretador --- (XXIV)
 > nextCmd (Conf lp c (r:rp)) = return (Conf (c:lp) r rp)
 
  
-Interpretador --- (XXV)
-=========================
-
-- Executar comandos individuais
-
-
-Interpretador --- (XXVI)
+Interpretador --- (XXIV)
 ========================
 
 - Executando programas
@@ -297,7 +295,7 @@ Interpretador --- (XXVI)
 > exec c@(Conf ls Dec rs) = modify decr >> next c
 > exec c@(Conf ls Pr rs) = get >>= iprint >> next c
 > exec c@(Conf ls Rd rs) = get >>= iread >> next c
-> exec c@(Conf ls (Block cs) rs) = undefined
+> exec c@(Conf ls (Block cs) rs) = loop c
 
 Interpretador --- (XXVII)
 ===========================
@@ -345,3 +343,12 @@ Interpretador --- (XXX)
 =======================
 
 - Instância de show
+
+> instance Show Cmd where
+>   show ML = "<"
+>   show MR = ">"
+>   show Inc = "+"
+>   show Dec = "-"
+>   show Pr  = "."
+>   show Rd = ","
+>   show (Block cs) = "[" ++ concatMap show cs ++ "]"
