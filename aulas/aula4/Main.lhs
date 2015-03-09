@@ -74,7 +74,7 @@
  
 > module Main where
 
-> import Control.Monad (liftM)
+> import Control.Monad (liftM, when)
 > import Data.Functor
  
 > import Text.ParserCombinators.Parsec
@@ -270,6 +270,78 @@
   \begin{frame}{Sistemas de Tipos --- (XIV)}
      \begin{block}{Preservação}
          Suponha $e : \tau$. Se $e \to e'$ então $e' : \tau$.
+     \end{block}
+  \end{frame}
+  \begin{frame}{Sistemas de Tipos --- (XV)}
+     \begin{block}{Definindo a sintaxe}
+
+> data Exp = Zero | Suc Exp | TTrue
+>          | TFalse | Pred Exp | IsZero Exp
+>          | If Exp Exp Exp
+>          deriving (Eq, Ord, Show)
+
+> data Ty = Nat | Boolean deriving (Eq, Ord)
+
+     \end{block}
+  \end{frame}
+  \begin{frame}{Sistemas de Tipos --- (XVI)}
+     \begin{block}{Representando Erros de Tipo}
+
+> data TyErr = TyErr {
+>              expected :: Ty,
+>              found  :: Ty }
+>              deriving (Eq, Ord)
+ 
+     \end{block}
+  \end{frame}
+
+  \begin{frame}{Sistemas de Tipos --- (XVII)}
+     \begin{block}{Lançando erros de tipos}
+
+> launchError :: Ty -> Ty -> Either TyErr ()
+> launchError e f = Left (TyErr e f)
+
+     \end{block}
+  \end{frame}
+  \begin{frame}{Sistemas de Tipos --- (XVIII)}
+     \begin{block}{Inferindo / verificando tipos}
+
+> infer :: Exp -> Either TyErr Ty
+> infer Zero = return Nat
+> infer TTrue = return Boolean
+> infer TFalse = return Boolean
+> infer (Suc e) = do
+>            t <- infer e
+>            when (t /= Nat) (launchError Nat t)
+>            return Nat
+
+     \end{block}
+  \end{frame}
+  \begin{frame}{Sistema de Tipos --- (XIX)}
+     \begin{block}{Inferindo / verificando tipos}
+
+> infer (Pred e) = do
+>           t <- infer e
+>           when (t /= Nat) (launchError Nat t)
+>           return Nat
+> infer (IsZero e) = do
+>           t <- infer e
+>           when (t /= Nat) (launchError Nat t)
+>           return Boolean
+ 
+     \end{block}
+  \end{frame}
+  \begin{frame}{Sistema de Tipos --- (XX)}
+     \begin{block}{Inferindo /verificando tipos}
+
+> infer (If e e' e'') = do
+>           t <- infer e
+>           t' <- infer e'
+>           t'' <- infer e''
+>           when (t /= Boolean) (launchError Boolean t)
+>           when (t /= t') (launchError t t')
+>           return t
+
      \end{block}
   \end{frame}
 \end{document}
