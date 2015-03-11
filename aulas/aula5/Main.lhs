@@ -110,6 +110,7 @@
                    & \mid & t\:\:t & \text{aplicação}\\
                    & \mid & \true & \text{constantes}\\
                    & \mid & \false & \text{constantes}\\
+                   & \mid & \iif{t}{t}{t} & \text{condicional}
               \end{array}
           \]
       \end{block}
@@ -136,6 +137,63 @@
                \item Inferir o tipo de $x$ com base em seus usos em $t$.
             \end{itemize}
          \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (V)}
+      \begin{block}{Verificação de tipos}
+         \begin{itemize}
+            \item Consideraremos que todo parâmetro de abstração terá seu tipo anotado.
+            \item Com isso, basta considerarmos que toda ocorrência da variável possuirá o tipo
+                  anotado. Isso nos leva a seguinte regra:
+                  \[
+                       \infer[]{\vdash\lambda x : \tau . t : \tau \to \tau'}
+                               {x : \tau \vdash t : \tau'}
+                  \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (VI)}
+      \begin{block}{Verificação de tipos}
+         \begin{itemize}
+            \item Como termos podem ter vários $\lambda$ aninhados, precisamos ``armazenar'' variáveis e seus respectivos tipos.
+            \item Damos o nome de contexto de tipos a sequência de pares formados por uma variável e seu tipo.
+            \item Representamos contextos por $\Gamma$. Regra considerando contextos.
+                  \[
+                       \infer[]{\Gamma\vdash\lambda x : \tau . t : \tau \to \tau'}
+                               {\Gamma,x : \tau \vdash t : \tau'}
+                  \]
+
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (VII)}
+      \begin{block}{Verificação de tipos}
+         \begin{itemize}
+            \item Regra para variáveis
+            \[
+                \infer[]{\Gamma\vdash x : \tau}{x : \tau \in \Gamma}
+            \]
+            \item Regra para aplicação
+            \[
+                \infer[]{\Gamma\vdash t\:\:t' : \tau}
+                        {\Gamma\vdash t : \tau'\to \tau & \Gamma\vdash t' : \tau'}
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (VIII)}
+      \begin{block}{Verificação de tipos}
+          \begin{itemize}
+             \item Regras para if e constantes
+          \[
+             \begin{array}{c}
+                \infer[]{\Gamma \vdash \true : \Bool}{}\\ \\
+                \infer[]{\Gamma \vdash \false : \Bool}{}\\ \\
+                \infer[]{\Gamma \vdash \iif{t}{t'}{t''} : \tau}
+                        {\Gamma \vdash t : \Bool & \Gamma \vdash : t' \tau & \Gamma \vdash t'' : t}\\ \\
+             \end{array}
+          \]
+          \end{itemize}
       \end{block}
    \end{frame}
 \end{document}
