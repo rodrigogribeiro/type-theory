@@ -74,10 +74,12 @@
 
 > module Main where
 
-> import Control.Monad.Identiry
+> import Control.Monad.Identity
 > import Control.Monad.Reader
-> import Control.Monad.State
 > import Control.Monad.Writer
+> import Control.Monad.Error
+> import qualified Data.Map as Map
+> import Data.Map (Map)
 > import Text.ParserCombinators.Parsec
  
 
@@ -190,10 +192,46 @@
                 \infer[]{\Gamma \vdash \true : \Bool}{}\\ \\
                 \infer[]{\Gamma \vdash \false : \Bool}{}\\ \\
                 \infer[]{\Gamma \vdash \iif{t}{t'}{t''} : \tau}
-                        {\Gamma \vdash t : \Bool & \Gamma \vdash : t' \tau & \Gamma \vdash t'' : t}\\ \\
+                        {\Gamma \vdash t : \Bool & \Gamma \vdash t' : \tau & \Gamma \vdash t'' : t}\\ \\
              \end{array}
           \]
           \end{itemize}
       \end{block}
    \end{frame}
-\end{document}
+
+> data Term = Var String | Lam Ty Term | App Term Term | TTrue | TFalse | If Term Term Term
+>             deriving (Eq, Ord, Show)
+
+> data Ty = Boolean | Ty :-> Ty deriving (Eq, Ord, Show)
+
+> type Env = Map String Ty
+
+> data TyErr = TyMismatch {
+>                 expected :: Ty,
+>                 found :: Ty,
+>                 expr :: Term
+>              } | VariableNotFound Int deriving (Eq, Ord)
+
+> type Check a = ReaderT Env (ErrorT TyErr Identity) a
+
+> lookupEnv :: String -> Env -> Check Ty
+> lookupEnv v e = maybe (VariableNotFound v)
+>                       return
+>                       (Map.lookup v e)
+
+> extendEnv :: String -> Ty -> Env -> Env
+> extendEnv v t = Map.insert v t
+
+> check :: Term -> Check Ty
+> check TTrue = return Boolean
+> check TFalse = return Boolean
+> check (Var v) = lookupEnv v
+> check (Lam v ty t)
+>       = local (extendEnv v ty)(check t)
+> check (App l r)
+>       = do
+>          tl <- check l
+>          tr <- check r
+>
+
+\End{document}
