@@ -199,7 +199,7 @@
       \end{block}
    \end{frame}
 
-> data Term = Var String | Lam Ty Term | App Term Term | TTrue | TFalse | If Term Term Term
+> data Term = Var String | Lam String Ty Term | App Term Term | TTrue | TFalse | If Term Term Term
 >             deriving (Eq, Ord, Show)
 
 > data Ty = Boolean | Ty :-> Ty deriving (Eq, Ord, Show)
@@ -210,28 +210,53 @@
 >                 expected :: Ty,
 >                 found :: Ty,
 >                 expr :: Term
->              } | VariableNotFound Int deriving (Eq, Ord)
+>              } | VariableNotFound String
+>                | ExpectingArrow Ty deriving (Eq, Ord)
+
+
+> instance Error TyErr where
+>    noMsg = VariableNotFound ""
+>    strMsg = VariableNotFound
 
 > type Check a = ReaderT Env (ErrorT TyErr Identity) a
 
 > lookupEnv :: String -> Env -> Check Ty
-> lookupEnv v e = maybe (VariableNotFound v)
+> lookupEnv v e = maybe (throwError (VariableNotFound v))
 >                       return
 >                       (Map.lookup v e)
 
 > extendEnv :: String -> Ty -> Env -> Env
 > extendEnv v t = Map.insert v t
 
+> unfoldArr :: Ty -> Maybe (Ty,Ty)
+> unfoldArr (t :-> t') = Just (t,t')
+> unfoldArr _ = Nothing
+
 > check :: Term -> Check Ty
 > check TTrue = return Boolean
 > check TFalse = return Boolean
-> check (Var v) = lookupEnv v
+> check (Var v) = ask >>= lookupEnv v
 > check (Lam v ty t)
->       = local (extendEnv v ty)(check t)
-> check (App l r)
+>       = do
+>           ty' <- local (extendEnv v ty)
+>                        (check t)
+>           return (ty :-> ty')
+> check e@(App l r)
 >       = do
 >          tl <- check l
 >          tr <- check r
->
+>          (a,r) <- maybe (throwError (ExpectingArrow tl))
+>                         return
+>                         (unfoldArr tl)
+>          when (tr /= a) (throwError (TyMismatch a tr e))
+>          return r
+> check x@(If c e e')
+>      = do
+>           tc <- check c
+>           when (tc /= Boolean) (throwError (TyMismatch Boolean tc x))
+>           t1 <- check e
+>           t2 <- check e'
+>           when (t1 /= t2) (throwError (TyMismatch t1 t2 x))
+>           return t1
 
 \End{document}
