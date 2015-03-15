@@ -27,6 +27,7 @@
 %options ghci
 
 %format :+: = "\C{\:\oplus\:}"
+%format :-> = "\V{" -> "}"
 
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
 \newcommand{\greenFG}[1]{\textcolor[rgb]{0,0.4,0}{#1}}
@@ -69,6 +70,7 @@
 \newcommand{\iif}[3]{\texttt{if }#1\texttt{ then }#2\texttt{ else }#3}
 \newcommand{\Nat}[0]{\texttt{Nat}}
 \newcommand{\Bool}[0]{\texttt{Bool}}
+\newcommand{\erase}[1]{\texttt{erase(\ensuremath{#1})}}
 
 %if False
 
@@ -198,25 +200,177 @@
           \end{itemize}
       \end{block}
    \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (IX)}
+      \begin{block}{Propriedades da relação de tipagem}
+         \begin{itemize}
+            \item Lema de inversão.
+            \item Unicidade de tipos.
+            \item Lema de formas canônicas.
+            \item Progresso.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (X)}
+      \begin{block}{Propriedades da relação de tipagem}
+         \begin{itemize}
+            \item Permutação.
+            \item Weakening.
+            \item Lema da substituição
+            \item Preservação
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XI)}
+      \begin{block}{Lema de inversão}
+         \begin{itemize}
+            \item Se $\Gamma \vdash x : \tau$ então $x : \tau \in \Gamma$.
+            \item Se $\Gamma \vdash \true : \tau$ então $\tau = \Bool$.
+            \item Se $\Gamma \vdash \false : \tau$ então $\tau = \Bool$.
+            \item Se $\Gamma \vdash \lambda x : \tau_1 . t : \tau$, então:
+            \begin{itemize}
+                \item $\tau = \tau_1 \to \tau_2$.
+                \item $\Gamma,x : \tau_1\vdash t : \tau_2$.
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XII)}
+      \begin{block}{Lema de inversão}
+         \begin{itemize}
+            \item Se $\Gamma \vdash t\:\:t' : \tau$, então $\Gamma\vdash t : \tau' \to \tau$ e $\Gamma \vdash t' : \tau'$.
+            \item Se $\Gamma \vdash \iif{t}{t'}{t''} : \tau$, então:
+            \begin{itemize}
+               \item $\Gamma \vdash t : \Bool$.
+               \item $\Gamma \vdash t' : \tau$.
+               \item $\Gamma\vdash t'' : \tau$.
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XIII)}
+      \begin{block}{Unicidade de tipos}
+         Se $\Gamma\vdash t : \tau$ e $\Gamma \vdash t : \tau'$ então $\tau = \tau'$
+      \end{block}
+      \begin{block}{Lema de formas canônicas}
+         \begin{itemize}
+            \item Se $v$ é um valor de tipo \Bool então $v = \true$ ou $v = \false$
+            \item Se $v$ é um valor de tipo $\tau \to \tau'$ então $v = \lambda x: \tau . t : \tau'$.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XIV)}
+      \begin{block}{Progresso}
+         Suponha que $\vdash t : \tau$. Então $t$ é um valor ou existe $t'$ tal que $t \to t'$.
+      \end{block}
+      \begin{block}{Permutação}
+         Suponha que $\Gamma \vdash t : \tau$ e seja $\Delta$ uma permutação de $\Gamma$. Então, $\Delta \vdash t : \tau$,
+         e ambas as derivações possuem a mesma altura.
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XV)}
+      \begin{block}{Weakening}
+         Suponha que $\Gamma \vdash t : \tau$ e $x\not\in dom(\Gamma)$. Então, $\Gamma , x : \tau' \vdash t : \tau $ e
+         ambas as derivações possuem a mesma altura.
+      \end{block}
+      \begin{block}{Lema da substituição}
+         Suponha que $\Gamma , x : \tau' \vdash t : \tau$ e $\Gamma \vdash t' : \tau'$ então $\Gamma \vdash [x \mapsto t']\:t$.
+      \end{block}
+      \begin{block}{Preservação}
+         Suponha que $\Gamma \vdash t : \tau$ e que $t \to t'$ então $\Gamma \vdash t' : \tau$
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XVI)}
+      \begin{block}{O Isomorfismo de Curry-Howard}
+         \[
+            \begin{array}{cc}
+               \lambda-\text{Cálculo} & \text{Lógica}\\ \hline & \\
+               \infer[_{(TABS)}]
+                     {\Gamma \vdash \lambda x : \tau' \to \tau }
+                     {\Gamma , x : \tau' \vdash \tau}
+               &
+               \infer[_{(\to_I)}]
+                     {\Gamma \vdash \tau' \to \tau}
+                     {\Gamma , \tau' \vdash \tau} \\ \\
+               \infer[_{(TAPP)}]
+                     {\Gamma \vdash t\:\:t' : \tau}
+                     {\Gamma \vdash t : \tau' \to \tau & \Gamma \vdash : \tau'}
+               &
+               \infer[_{(\to_E)}]
+                     {\Gamma \vdash \tau}
+                     {\Gamma \vdash \tau' \to \tau &  \Gamma \vdash \tau'}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XVII)}
+      \begin{block}{O Isomorfismo de Curry-Howard}
+         \[
+             \begin{array}{cc}
+                \text{Lógica} & \text{Linguagens de Programação}\\ \hline
+                \text{proposições} & \text{tipos}\\
+                \text{proposição }P\to Q & \text{tipo } P \to Q \\
+                \text{proposição }P \land Q & \text{tipo } P \times Q\\
+                \text{Prova de }P & \text{programa de tipo }P\\
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XVIII)}
+      \begin{block}{Erasure}
+         \[
+            \begin{array}{lcl}
+               \erase{x} & = & x \\
+               \erase{\lambda x:\tau.t} & = & \lambda x.\erase{t}\\
+               \erase{t\:\:t'} & = & \erase{t}\:\:\erase{t'}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XIX)}
+      \begin{block}{Propriedades da erasure}
+         Sejam $t$ e $t'$ tais que $\Gamma \vdash t : \tau$ e $\Gamma\vdash t' : \tau'$.
+         \begin{itemize}
+            \item Se $t \to t'$, então $\erase{t} \to \erase{t'}$.
+            \item Se $\erase{t} \to m'$, então existe $t'$ tal que $t \to t'$ e $\erase{t'} = m'$.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XX)}
+      \begin{block}{Implementando um type checker}
 
-> data Term = Var String | Lam String Ty Term | App Term Term | TTrue | TFalse | If Term Term Term
+> data Term = Var String | Lam String Ty Term
+>           | App Term Term | TTrue | TFalse
+>           | If Term Term Term
 >             deriving (Eq, Ord, Show)
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXI)}
+      \begin{block}{Implementando um typechecker}
 
 > data Ty = Boolean | Ty :-> Ty deriving (Eq, Ord, Show)
 
 > type Env = Map String Ty
+
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXII)}
+      \begin{block}{Implementando um typechecker}
 
 > data TyErr = TyMismatch {
 >                 expected :: Ty,
 >                 found :: Ty,
 >                 expr :: Term
 >              } | VariableNotFound String
->                | ExpectingArrow Ty deriving (Eq, Ord)
+>                | ExpectingArrow Ty
+>                deriving (Eq, Ord)
 
 
-> instance Error TyErr where
->    noMsg = VariableNotFound ""
->    strMsg = VariableNotFound
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXIII)}
+      \begin{block}{Implementando um typechecker}
 
 > type Check a = ReaderT Env (ErrorT TyErr Identity) a
 
@@ -228,9 +382,10 @@
 > extendEnv :: String -> Ty -> Env -> Env
 > extendEnv v t = Map.insert v t
 
-> unfoldArr :: Ty -> Maybe (Ty,Ty)
-> unfoldArr (t :-> t') = Just (t,t')
-> unfoldArr _ = Nothing
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXIV)}
+      \begin{block}{Implementando um typechecker}
 
 > check :: Term -> Check Ty
 > check TTrue = return Boolean
@@ -241,6 +396,12 @@
 >           ty' <- local (extendEnv v ty)
 >                        (check t)
 >           return (ty :-> ty')
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXV)}
+      \begin{block}{Implementando um typechecker}
+
 > check e@(App l r)
 >       = do
 >          tl <- check l
@@ -250,6 +411,12 @@
 >                         (unfoldArr tl)
 >          when (tr /= a) (throwError (TyMismatch a tr e))
 >          return r
+
+      \end{block}
+   \end{frame}
+   \begin{frame}{$\lambda$-Cálculo Tipado Simples --- (XXVI)}
+      \begin{block}{Implementando um typechecker}
+
 > check x@(If c e e')
 >      = do
 >           tc <- check c
@@ -258,5 +425,19 @@
 >           t2 <- check e'
 >           when (t1 /= t2) (throwError (TyMismatch t1 t2 x))
 >           return t1
+ 
+      \end{block}
+   \end{frame}
+\end{document}
 
-\End{document}
+%if False
+
+> instance Error TyErr where
+>    noMsg = VariableNotFound ""
+>    strMsg = VariableNotFound
+
+> unfoldArr :: Ty -> Maybe (Ty,Ty)
+> unfoldArr (t :-> t') = Just (t,t')
+> unfoldArr _ = Nothing
+
+%endif
