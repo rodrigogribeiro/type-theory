@@ -71,22 +71,132 @@
 \newcommand{\Nat}[0]{\texttt{Nat}}
 \newcommand{\Bool}[0]{\texttt{Bool}}
 \newcommand{\erase}[1]{\texttt{erase(\ensuremath{#1})}}
+\newcommand{\unit}[0]{\texttt{unit}}
+\newcommand{\Unit}[0]{\texttt{Unit}}
+\newcommand{\deff}[0]{\ensuremath{\stackrel{def}{=}}}
+\newcommand{\fv}[1]{\ensuremath{fv(#1)}}
 
 %if False
 
 > module Main where
 
+> import Control.Monad
 > import Control.Monad.Identity
 > import Control.Monad.Reader
 > import Control.Monad.Writer
 > import Control.Monad.Error
+> import Control.Monad.State
 > import qualified Data.Map as Map
 > import Data.Map (Map)
 > import Text.ParserCombinators.Parsec
+
+Terms and types structures
+==========================
+
+> newtype Name = Name {out :: String}
+>                deriving (Eq, Ord, Show)
+
+> data Ty = TBool | TUnit | Ty :-> Ty
+>           deriving (Eq, Ord, Show)
+
+> data Term =
+>   TTrue | TFalse |
+>   Var Name |
+>   Lam Name Ty Term |
+>   App Term Term |
+>   Unit |
+>   If Term Term Term
+>   deriving (Eq, Ord, Show)
+
+
+> data XTerm  =
+>   XTrue | XFalse |
+>   XVar Name | XLam Name Ty XTerm |
+>   XApp XTerm XTerm | XUnit |
+>   XIf XTerm XTerm XTerm |
+>   Seq XTerm XTerm | -- sequence
+>   Wild Ty XTerm    -- wildcards
+>   deriving (Eq, Ord, Show)
+
+Type checking and elaboration structures
+========================================
+
+> type Env = Map Name Ty
  
+> type TcElabM a = ReaderT Env (ErrorT String (StateT Integer Identity)) a
+
+> runElabM :: TcElabM a -> (Either String a, Integer)
+> runElabM comp = runIdentity (runStateT (runErrorT (runReaderT comp Map.empty)) 0)
+
+> freshName :: TcElabM Name
+> freshName
+>     = do
+>         v <- get
+>         put (v + 1)
+>         return (Name ("x" ++ (show v)))
+
+> extendEnv :: Name -> Ty -> Env -> Env
+> extendEnv n t = Map.insert n t
+
+> lookupEnv :: Name -> TcElabM Ty
+> lookupEnv n
+>      = do
+>        t <- liftM (Map.lookup n) ask
+>        maybe (varNotFound n) return t
+
+> varNotFound :: Name -> TcElabM a
+> varNotFound = throwError . (++) "Variable Not Found" . out
+
+> typeMismatch :: Ty -> Ty -> TcElabM a
+> typeMismatch f e = throwError ("Expected:" ++ show e ++ "\nFound:" ++ show f)
+
+> arrowExpected :: Ty -> TcElabM a
+> arrowExpected = throwError . ("Expected arrow type, but found:\n" ++) . show
+
+Type checking and elaboration algorithm
+========================================
+
+> check :: XTerm -> TcElabM (Term, Ty)
+> check XTrue = return (TTrue , TBool)
+> check XFalse = return (TFalse, TBool)
+> check v@(XVar n)
+>   = do
+>       t <- lookupEnv n
+>       return (Var n,t)
+> check e@(XLam n ty t)
+>   = do
+>       (t', ty') <- local (extendEnv n ty) (check t)
+>       return (Lam n ty t', ty :-> ty')
+> check e@(XApp l r)
+>   = do
+>       (l',t) <- check l
+>       (r',t') <- check r
+>       (a,b) <- maybe (arrowExpected t)
+>                return
+>                (unfoldArr t)
+>       when (a /= t') (typeMismatch t' a)
+>       return (App l' r', t')
+> check x@(XIf c e e')
+>      = do
+>           (c', tc) <- check c
+>           when (tc /= TBool) (typeMismatch TBool tc)
+>           (e1, t1) <- check e
+>           (e2, t2) <- check e'
+>           when (t1 /= t2) (typeMismatch t1 t2)
+>           return (If c' e1 e2,t1)
+> check (Seq t t')
+>      = do
+>         (e,ty) <- check t
+>         when (ty /= TUnit) (typeMismatch ty TUnit)
+>         (e',ty') <- check t'
+>         n <- freshName
+>         return ((App (Lam n TUnit e) e') , ty')
+
+> unfoldArr :: Ty -> Maybe (Ty,Ty)
+> unfoldArr (l :-> r) = Just (l,r)
+> unfoldArr _ = Nothing
 
 %endif
-
 
 \begin{document}
    \begin{frame}
@@ -118,6 +228,80 @@
             \item Elaboração (desugaring): Processo de transformação de açúcar sintático em
                   construções básicas da linguagem.
          \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (III)}
+      \begin{block}{Introduzindo novos tipos básicos}
+         \begin{itemize}
+            \item Tipo básico: tipo que não pode ser definido usando mecanismos da própria linguagem.
+            \item Ex: String, float, etc...
+            \item Como introduzir um novo tipo básico:
+            \begin{itemize}
+                \item Estender a linguagem de tipos (adicionando o tipo em questão).
+                \item Estender a sintaxe de programas (adicionando constantes deste tipo).
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (IV)}
+      \begin{block}{Tipo \Unit}
+         \begin{itemize}
+            \item Tipo que possui um único valor: \unit.
+            \item Útil para representar resultados de funções que
+                  geram efeitos colaterais.
+            \item Usado para representar sequenciamento de funções como açúcar sintático.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (V)}
+      \begin{block}{Extensões para o tipo \Unit}
+          \[
+              \begin{array}{lclr}
+                 t & ::=  & ...   & \text{termos}\\
+                   & \mid & \unit & \text{constante }\unit\\
+                 v & ::=  & ...   & \text{valores} \\
+                   & \mid & \unit & \text{valor }\unit\\
+              \tau & ::=  & ...   & \text{tipos básicos}\\
+                   & \mid & \Unit & \text{tipo }\Unit
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (VI)}
+      \begin{block}{Extensões para o tipo \Unit}
+         \[
+             \infer[_{(TUnit)}]{\Gamma \vdash \unit : \Unit}{}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (VII)}
+      \begin{block}{Açúcar Sintático: Sequenciamento}
+          \[
+              \begin{array}{lcl}
+                 t_1\, ; \, t_2 & \deff & (\lambda x:\Unit . t_2)\: t_1 \\
+                                 &      & \text{onde }x\not\in\fv{t_2}
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (VIII)}
+      \begin{block}{Açúcar Sintático: Sequenciamento}
+         \[
+             \begin{array}{cc}
+                 \infer[_{(ESeq)}]{t_1\:;\:t_2\to t'_1\:;\: t_2}
+                                  {t_1 \to t'_1}
+                 &
+                 \infer[_{(ESeqNext)}]{\unit\:;\:t_2\to t_2}{}
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (IX)}
+      \begin{block}{Açúcar Sintático: Sequenciamento}
+         \[
+             \infer[_{(TSeq)}]{\Gamma\vdash t_1\:;\:t_2 : \tau}
+                   {\Gamma \vdash t_1 : \Unit & \Gamma \vdash t_2 : \tau}
+         \]
       \end{block}
    \end{frame}
 \end{document}
