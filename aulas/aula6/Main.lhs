@@ -231,6 +231,24 @@ Type checking and elaboration algorithm
       \end{block}
    \end{frame}
    \begin{frame}{Extensões --- (III)}
+      \begin{block}{Setup inicial}
+         \begin{spec}
+ data Ty = TBool | Ty :-> Ty
+           deriving (Eq, Ord, Show)
+
+
+ data Term =
+   TTrue | TFalse |
+   Var Name |
+   Lam Name Ty Term |
+   App Term Term |
+   If Term Term Term
+   deriving (Eq, Ord, Show)
+
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (IV)}
       \begin{block}{Introduzindo novos tipos básicos}
          \begin{itemize}
             \item Tipo básico: tipo que não pode ser definido usando mecanismos da própria linguagem.
@@ -243,7 +261,7 @@ Type checking and elaboration algorithm
          \end{itemize}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (IV)}
+   \begin{frame}{Extensões --- (V)}
       \begin{block}{Tipo \Unit}
          \begin{itemize}
             \item Tipo que possui um único valor: \unit.
@@ -253,7 +271,7 @@ Type checking and elaboration algorithm
          \end{itemize}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (V)}
+   \begin{frame}{Extensões --- (VI)}
       \begin{block}{Extensões para o tipo \Unit}
           \[
               \begin{array}{lclr}
@@ -267,14 +285,14 @@ Type checking and elaboration algorithm
           \]
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (VI)}
+   \begin{frame}{Extensões --- (VII)}
       \begin{block}{Extensões para o tipo \Unit}
          \[
              \infer[_{(TUnit)}]{\Gamma \vdash \unit : \Unit}{}
          \]
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (VII)}
+   \begin{frame}{Extensões --- (VIII)}
       \begin{block}{Açúcar Sintático: Sequenciamento}
           \[
               \begin{array}{lcl}
@@ -284,7 +302,7 @@ Type checking and elaboration algorithm
           \]
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (VIII)}
+   \begin{frame}{Extensões --- (IX)}
       \begin{block}{Açúcar Sintático: Sequenciamento}
          \[
              \begin{array}{cc}
@@ -296,12 +314,57 @@ Type checking and elaboration algorithm
          \]
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (IX)}
+   \begin{frame}{Extensões --- (X)}
       \begin{block}{Açúcar Sintático: Sequenciamento}
          \[
              \infer[_{(TSeq)}]{\Gamma\vdash t_1\:;\:t_2 : \tau}
                    {\Gamma \vdash t_1 : \Unit & \Gamma \vdash t_2 : \tau}
          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XI)}
+      \begin{block}{Açúcar Sintático: Wildcards}
+          \[
+              \begin{array}{lclr}
+                 t & ::=  & ...   & \text{termos}\\
+                   & \mid & \lambda \_:\tau . t & \text{wildcard }\\
+                 v & ::=  & ...   & \text{valores} \\
+                   & \mid & \lambda \_:\tau . t & \text{wildcard }\\
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XII)}
+      \begin{block}{Açúcar Sintático: Wildcards}
+         \[
+             \begin{array}{c}
+                \infer[_{(TWild)}]{\Gamma \vdash \lambda\_:\tau_1 . t : \tau_1 \to \tau_2}
+                                  {\Gamma \vdash t : \tau_2} \\ \\
+                 (\lambda\_ : \tau_1 . t)\:v_2 \to t
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XIII)}
+      \begin{block}{Implementando extensões relacionadas a \Unit}
+        \begin{itemize}
+           \item Sintaxe núcleo: tipo |Term|.
+           \item Sintaxe derivada: tipo |XTerm|.
+        \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XIV)}
+      \begin{block}{Sintaxe estendida}
+        \begin{spec}
+ data XTerm  =
+   XTrue | XFalse |
+   XVar Name | XLam Name Ty XTerm |
+   XApp XTerm XTerm | XUnit |
+   XIf XTerm XTerm XTerm |
+   Seq XTerm XTerm |
+   Wild Ty XTerm
+   deriving (Eq, Ord, Show)
+       \end{spec}
       \end{block}
    \end{frame}
 \end{document}
