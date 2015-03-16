@@ -75,8 +75,12 @@
 \newcommand{\Unit}[0]{\texttt{Unit}}
 \newcommand{\deff}[0]{\ensuremath{\stackrel{def}{=}}}
 \newcommand{\fv}[1]{\ensuremath{fv(#1)}}
+\newcommand{\ann}[2]{\ensuremath{#1\:\texttt{as}\:#2}}
+\newcommand{\llet}[2]{\ensuremath{\texttt{let}\:#1\:\texttt{in}\:#2}}
 
 %if False
+
+> {-#LANGUAGE TupleSections#-}
 
 > module Main where
 
@@ -88,6 +92,7 @@
 > import Control.Monad.State
 > import qualified Data.Map as Map
 > import Data.Map (Map)
+> import Data.Maybe (isNothing)
 > import Text.ParserCombinators.Parsec
 
 Terms and types structures
@@ -96,7 +101,7 @@ Terms and types structures
 > newtype Name = Name {out :: String}
 >                deriving (Eq, Ord, Show)
 
-> data Ty = TBool | TUnit | Ty :-> Ty
+> data Ty = TBool | TUnit | Ty :-> Ty | Ty :*: Ty
 >           deriving (Eq, Ord, Show)
 
 > data Term =
@@ -105,7 +110,9 @@ Terms and types structures
 >   Lam Name Ty Term |
 >   App Term Term |
 >   Unit |
->   If Term Term Term
+>   If Term Term Term |
+>   Pair Term Term |
+>   Fst Term | Snd Term
 >   deriving (Eq, Ord, Show)
 
 
@@ -115,7 +122,12 @@ Terms and types structures
 >   XApp XTerm XTerm | XUnit |
 >   XIf XTerm XTerm XTerm |
 >   Seq XTerm XTerm | -- sequence
->   Wild Ty XTerm    -- wildcards
+>   Wild Ty XTerm   | -- wildcards
+>   Ann XTerm Ty    |
+>   Let Name XTerm XTerm |
+>   XPair XTerm XTerm |
+>   XFst XTerm |
+>   XSnd XTerm
 >   deriving (Eq, Ord, Show)
 
 Type checking and elaboration structures
@@ -152,6 +164,11 @@ Type checking and elaboration structures
 
 > arrowExpected :: Ty -> TcElabM a
 > arrowExpected = throwError . ("Expected arrow type, but found:\n" ++) . show
+ 
+> pairExpected :: Ty -> TcElabM a
+> pairExpected = throwError . ("Expected pair type, but found:\n" ++) . show
+ 
+
 
 Type checking and elaboration algorithm
 ========================================
@@ -159,6 +176,7 @@ Type checking and elaboration algorithm
 > check :: XTerm -> TcElabM (Term, Ty)
 > check XTrue = return (TTrue , TBool)
 > check XFalse = return (TFalse, TBool)
+> check XUnit = return (Unit, TUnit)
 > check v@(XVar n)
 >   = do
 >       t <- lookupEnv n
@@ -191,10 +209,48 @@ Type checking and elaboration algorithm
 >         (e',ty') <- check t'
 >         n <- freshName
 >         return ((App (Lam n TUnit e) e') , ty')
+> check (Wild ty t)
+>      = do
+>         (e,ty') <- check t
+>         n <- freshName
+>         return ((Lam n ty e), ty :-> ty')
+> check (Ann t ty)
+>      = do
+>         (e,ty') <- check t
+>         when (ty /= ty')(typeMismatch ty' ty)
+>         return (e , ty')
+> check (Let n t t')
+>      = do
+>         (e,ty) <- check t
+>         (e',ty') <- local (extendEnv n ty)(check t')
+>         return (App (Lam n ty e') e, ty')
+> check (XPair t t')
+>      = do
+>         (e, ty) <- check t
+>         (e',ty') <- check t'
+>         return (Pair e e', ty :*: ty')
+> check (XFst t)
+>      = do
+>         (e,ty) <- check t
+>         maybe (pairExpected ty)
+>               (return . (Fst e, ) . fst)
+>               (unfoldPair ty)
+> check (XSnd t)
+>      = do
+>         (e,ty) <- check t
+>         maybe (pairExpected ty)
+>               (return . (Snd e, ) . snd)
+>               (unfoldPair ty)
+
+
 
 > unfoldArr :: Ty -> Maybe (Ty,Ty)
 > unfoldArr (l :-> r) = Just (l,r)
 > unfoldArr _ = Nothing
+
+> unfoldPair :: Ty -> Maybe (Ty,Ty)
+> unfoldPair (l :*: r) = Just (l,r)
+> unfoldPair _ = Nothing
 
 %endif
 
@@ -359,12 +415,139 @@ Type checking and elaboration algorithm
  data XTerm  =
    XTrue | XFalse |
    XVar Name | XLam Name Ty XTerm |
-   XApp XTerm XTerm | XUnit |
-   XIf XTerm XTerm XTerm |
+   XApp XTerm XTerm | XIf XTerm XTerm XTerm |
+   XUnit |
    Seq XTerm XTerm |
    Wild Ty XTerm
    deriving (Eq, Ord, Show)
        \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XV)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check :: XTerm -> TcElabM (Term, Ty)
+ check XUnit = return (Unit, TUnit)
+...
+ check (Seq t t')
+      = do
+         (e,ty) <- check t
+         when (ty /= TUnit) (typeMismatch ty TUnit)
+         (e',ty') <- check t'
+         n <- freshName
+         return ((App (Lam n TUnit e) e') , ty')
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XVI)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+
+ check (Wild ty t)
+      = do
+         (e,ty') <- check t
+         n <- freshName
+         return ((Lam n ty e), ty :-> ty')
+
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XVII)}
+      \begin{block}{Anotações de tipo}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & \ann{t}{\tau} & \text{anotação de tipo.}
+             \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XVIII)}
+      \begin{block}{Anotações de tipo}
+         \[
+            \begin{array}{cc}
+               \infer[_{(EAnn)}]{\ann{v_1}{\tau} \to v_1}{} &
+               \infer[_{(EAnn1)}]{\ann{t}{\tau}\to\ann{t'}{\tau}}
+                                 {t \to t'} \\ \\
+                \multicolumn{2}{c}{
+                   \infer[_{(TAnn)}]{\Gamma \vdash \ann{t}{\tau} : \tau}
+                         {\Gamma \vdash t : \tau}
+               }
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XIX)}
+      \begin{block}{Sintaxe estendida}
+         \begin{spec}
+ data XTerm  =
+...
+   Ann XTerm Ty
+  deriving (Eq, Ord, Show)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XX)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check :: XTerm -> TcElabM (Term , Ty)
+...
+ check (Ann t ty)
+      = do
+         (e,ty') <- check t
+         when (ty /= ty')(typeMismatch ty' ty)
+         return (e , ty')
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXI)}
+      \begin{block}{Termos Let --- Sintaxe}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & \llet{x = t}{t} & \text{termo let}
+             \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXII)}
+      \begin{block}{Termos Let --- Semântica e Tipagem}
+         \[
+             \begin{array}{cc}
+               \infer[_{(ELetV)}]{\llet{x = v}{t_1}\to [x \mapsto v]\:t_1}{} &
+               \infer[_{(ELet)}]{\llet{x = t_1}{t_2}\to \llet{x = t'_1}{t_2}}
+                                {t_1 \to t'_1} \\
+               \multicolumn{2}{c}{
+                  \infer[_{(TLet)}]{\Gamma\vdash \llet{x = t_1}{t_2} : \tau}
+                                   {\Gamma \vdash t_1 : \tau' &
+                                    \Gamma , x : \tau' \vdash t_2 : \tau}
+               }
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXIII)}
+      \begin{block}{Sintaxe estendida}
+         \begin{spec}
+data XTerm =
+...
+   Let Name XTerm XTerm
+   deriving (Eq, Ord, Show)
+
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXIV)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check :: XTerm -> TcElabM (Term, Ty)
+...
+ check (Let n t t')
+      = do
+         (e,ty) <- check t
+         (e',ty') <- local (extendEnv n ty)(check t')
+         return (App (Lam n e') e, ty')
+         \end{spec}
       \end{block}
    \end{frame}
 \end{document}
