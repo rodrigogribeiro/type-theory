@@ -513,15 +513,15 @@ Type checking and elaboration algorithm
    \begin{frame}{Extensões --- (XXII)}
       \begin{block}{Termos Let --- Semântica e Tipagem}
          \[
-             \begin{array}{cc}
-               \infer[_{(ELetV)}]{\llet{x = v}{t_1}\to [x \mapsto v]\:t_1}{} &
+             \begin{array}{c}
+               \infer[_{(ELetV)}]{\llet{x = v}{t_1}\to [x \mapsto v]\:t_1}{} \\ \\
                \infer[_{(ELet)}]{\llet{x = t_1}{t_2}\to \llet{x = t'_1}{t_2}}
-                                {t_1 \to t'_1} \\
-               \multicolumn{2}{c}{
+                                {t_1 \to t'_1} \\ \\
+
                   \infer[_{(TLet)}]{\Gamma\vdash \llet{x = t_1}{t_2} : \tau}
                                    {\Gamma \vdash t_1 : \tau' &
                                     \Gamma , x : \tau' \vdash t_2 : \tau}
-               }
+
              \end{array}
          \]
       \end{block}
