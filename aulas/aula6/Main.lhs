@@ -28,6 +28,7 @@
 
 %format :+: = "\C{\:\oplus\:}"
 %format :-> = "\V{" -> "}"
+%format :*: = "\V{\:\times\:}"
 
 \newcommand{\redFG}[1]{\textcolor[rgb]{0.6,0,0}{#1}}
 \newcommand{\greenFG}[1]{\textcolor[rgb]{0,0.4,0}{#1}}
@@ -102,6 +103,7 @@ Terms and types structures
 >                deriving (Eq, Ord, Show)
 
 > data Ty = TBool | TUnit | Ty :-> Ty | Ty :*: Ty
+>           | Ty :+: Ty
 >           deriving (Eq, Ord, Show)
 
 > data Term =
@@ -113,6 +115,8 @@ Terms and types structures
 >   If Term Term Term |
 >   Pair Term Term |
 >   Fst Term | Snd Term
+>   Inl Term | Inr Term |
+>   Case Term Term Term
 >   deriving (Eq, Ord, Show)
 
 
@@ -127,7 +131,10 @@ Terms and types structures
 >   Let Name XTerm XTerm |
 >   XPair XTerm XTerm |
 >   XFst XTerm |
->   XSnd XTerm
+>   XSnd XTerm |
+>   XInl XTerm Ty |
+>   XInr XTerm Ty |
+>   XCase XTerm Ty XTerm XTerm
 >   deriving (Eq, Ord, Show)
 
 Type checking and elaboration structures
@@ -550,4 +557,79 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
+   \begin{frame}{Extensões --- (XXV)}
+      \begin{block}{Pares e projeções}
+         \begin{itemize}
+            \item Recurso presente em toda linguagem funcional.
+            \item Pode ser visto como açúcar sintático.
+            \begin{itemize}
+               \item Tradução para o $\lambda$-cálculo atipado.
+            \end{itemize}
+            \item Adicionaremos como primitivas da linguagem pares e projeções.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXVI)}
+      \begin{block}{Alterações na sintaxe núcleo}
+         \begin{spec}
+ data Ty = ... | Ty :*: Ty
+           deriving(Eq, Ord, Show)
+
+ data Term =
+...
+   Pair Term Term |
+   Fst Term | Snd Term
+   deriving (Eq, Ord, Show)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXVII)}
+      \begin{block}{Alterações na sintaxe estendida}
+         \begin{spec}
+
+ data XTerm  =
+...
+   XPair XTerm XTerm |
+   XFst XTerm |
+   XSnd XTerm
+   deriving (Eq, Ord, Show)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXVIII)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check (XPair t t')
+      = do
+         (e, ty) <- check t
+         (e',ty') <- check t'
+         return (Pair e e', ty :*: ty')
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXIX)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check (XFst t)
+      = do
+         (e,ty) <- check t
+         maybe (pairExpected ty)
+               (return . (Fst e, ) . fst)
+               (unfoldPair ty)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXX)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check (XSnd t)
+      = do
+         (e,ty) <- check t
+         maybe (pairExpected ty)
+               (return . (Snd e, ) . snd)
+               (unfoldPair ty)
+         \end{spec}
+      \end{block}
+   \end{frame}
+
 \end{document}
