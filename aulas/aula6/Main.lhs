@@ -78,6 +78,11 @@
 \newcommand{\fv}[1]{\ensuremath{fv(#1)}}
 \newcommand{\ann}[2]{\ensuremath{#1\:\texttt{as}\:#2}}
 \newcommand{\llet}[2]{\ensuremath{\texttt{let}\:#1\:\texttt{in}\:#2}}
+\newcommand{\inl}[1]{\ensuremath{\texttt{inl}\:#1}}
+\newcommand{\inr}[1]{\ensuremath{\texttt{inr}\:#1}}
+\newcommand{\ccase}[5]{\ensuremath{\texttt{case}\:#1\:\texttt{of}\:\{\inl\:#2\Rightarrow #3;\:\inr\:#4\Rightarrow\:#5\}}}
+\newcommand{\fix}[1]{\ensuremath{\texttt{fix}(#1)}}
+\newcommand{\lletrec}[2]{\ensuremath{\texttt{letrec}\:#1\:\texttt{in}\:#2}}
 
 %if False
 
@@ -93,7 +98,7 @@
 > import Control.Monad.State
 > import qualified Data.Map as Map
 > import Data.Map (Map)
-> import Data.Maybe (isNothing)
+> import Data.Maybe (isNothing, fromJust)
 > import Text.ParserCombinators.Parsec
 
 Terms and types structures
@@ -114,9 +119,9 @@ Terms and types structures
 >   Unit |
 >   If Term Term Term |
 >   Pair Term Term |
->   Fst Term | Snd Term
+>   Fst Term | Snd Term |
 >   Inl Term | Inr Term |
->   Case Term Term Term
+>   Case Term Name Term Name Term
 >   deriving (Eq, Ord, Show)
 
 
@@ -134,7 +139,7 @@ Terms and types structures
 >   XSnd XTerm |
 >   XInl XTerm Ty |
 >   XInr XTerm Ty |
->   XCase XTerm Ty XTerm XTerm
+>   XCase XTerm Ty Name XTerm Name XTerm
 >   deriving (Eq, Ord, Show)
 
 Type checking and elaboration structures
@@ -175,6 +180,8 @@ Type checking and elaboration structures
 > pairExpected :: Ty -> TcElabM a
 > pairExpected = throwError . ("Expected pair type, but found:\n" ++) . show
  
+> sumExpected :: Ty -> TcElabM a
+> sumExpected = throwError . ("Expected sum type, but found:\n" ++) . show
 
 
 Type checking and elaboration algorithm
@@ -248,8 +255,30 @@ Type checking and elaboration algorithm
 >         maybe (pairExpected ty)
 >               (return . (Snd e, ) . snd)
 >               (unfoldPair ty)
+> check (XInl t ty)
+>      = do
+>         (e, ty') <- check t
+>         return (Inl e, ty' :+: ty)
+> check (XInr t ty)
+>      = do
+>         (e, ty') <- check t
+>         return (Inr e, ty :+: ty')
+> check (XCase t ty n' t' n'' t'')
+>      = do
+>         (e, ty1) <- check t
+>         let v = unfoldSum ty1
+>         when (isNothing v)
+>              (sumExpected ty1)
+>         let (l,r) = fromJust v
+>         (e',tyl) <- local (extendEnv n' l) (check t')
+>         (e'',tyr) <- local (extendEnv n'' r) (check t'')
+>         when (tyl /= tyr) (typeMismatch tyl tyr)
+>         return (Case e n' e' n'' e'', tyl)
 
 
+> unfoldSum :: Ty -> Maybe (Ty , Ty)
+> unfoldSum (t :+: t') = Just (t , t')
+> unfoldSum _ = Nothing
 
 > unfoldArr :: Ty -> Maybe (Ty,Ty)
 > unfoldArr (l :-> r) = Just (l,r)
@@ -570,6 +599,55 @@ data XTerm =
       \end{block}
    \end{frame}
    \begin{frame}{Extensões --- (XXVI)}
+      \begin{block}{Modificações na sintaxe}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & (t,t) & \text{termo par}\\
+                  &  \mid & t.1   & \text{projeção 1}\\
+                  &  \mid & t.2   & \text{projeção 2}\\
+                v & ::=   & ... & \text{valores}\\
+                  & \mid  & (v,v) & \text{par de valores}\\
+                \tau & ::= & ... & \text{tipos} \\
+                     & \mid & \tau \times \tau & \text{produto}
+             \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXVII)}
+      \begin{block}{Semântica}
+         \[
+            \begin{array}{cc}
+               \infer[_{(EPairBeta1)}]{(v_1,v_2).1 \to v_1}{} &
+               \infer[_{(EPairBeta2)}]{(v_1,v_2).1 \to v_2}{} \\ \\
+               \infer[_{(EProj1)}]{t.1 \to t'.1}{t \to t'} &
+               \infer[_{(EProj2)}]{t.2 \to t'.2}{t \to t'} \\ \\
+               \infer[_{(EPair1)}]{(t_1,t_2) \to (t'_1, t_2)}
+                                  {t_1 \to t'_1} &
+               \infer[_{(EPair2)}]{(v_1,t_2) \to (v_1, t'_2)}
+                                  {t_2 \to t'_2} \\
+
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXVIII)}
+      \begin{block}{Sistema de tipos}
+         \[
+            \begin{array}{c}
+                \infer[_{(TPair)}]{\Gamma\vdash (t,t') : \tau \times \tau'}
+                                  {\Gamma \vdash t : \tau &
+                                   \Gamma \vdash t' : \tau'} \\ \\
+                \infer[_{(TProj1)}]{\Gamma\vdash t.1 : \tau}
+                                   {\Gamma \vdash t : \tau \times \tau'} \\ \\
+                \infer[_{(TProj2)}]{\Gamma\vdash t.2 : \tau'}
+                                   {\Gamma \vdash t : \tau \times \tau'}
+
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXIX)}
       \begin{block}{Alterações na sintaxe núcleo}
          \begin{spec}
  data Ty = ... | Ty :*: Ty
@@ -583,7 +661,7 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (XXVII)}
+   \begin{frame}{Extensões --- (XXX)}
       \begin{block}{Alterações na sintaxe estendida}
          \begin{spec}
 
@@ -596,7 +674,7 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (XXVIII)}
+   \begin{frame}{Extensões --- (XXXI)}
       \begin{block}{Verificação de tipos e elaboração}
          \begin{spec}
  check (XPair t t')
@@ -607,7 +685,7 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (XXIX)}
+   \begin{frame}{Extensões --- (XXXII)}
       \begin{block}{Verificação de tipos e elaboração}
          \begin{spec}
  check (XFst t)
@@ -619,7 +697,7 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
-   \begin{frame}{Extensões --- (XXX)}
+   \begin{frame}{Extensões --- (XXXIII)}
       \begin{block}{Verificação de tipos e elaboração}
          \begin{spec}
  check (XSnd t)
@@ -631,5 +709,176 @@ data XTerm =
          \end{spec}
       \end{block}
    \end{frame}
+   \begin{frame}{Extensões --- (XXXIV)}
+      \begin{block}{Somas e análise de casos}
+         \begin{itemize}
+            \item Tipo para representar união disjunta.
+            \item Suporte a análise de casos.
+            \item Novamente, modificações na sintaxe núcleo e estendida.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXXV)}
+      \begin{block}{Modificações na sintaxe}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & \inl{t} & \text{esquerda}\\
+                  &  \mid & \inr{t}   & \text{direita}\\
+                  &  \mid & \ccase{t}{x}{t'}{x'}{t''}   & \text{análise de casos}\\
+                v & ::=   & ... & \text{valores}\\
+                  & \mid  & \inl{v} & \text{valor esquerda}\\
+                  & \mid  & \inr{v} & \text{valor direita}\\
+                \tau & ::= & ... & \text{tipos} \\
+                     & \mid & \tau + \tau & \text{soma}
+             \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXXVI)}
+      \begin{block}{Semântica}
+         \[
+            \begin{array}{c}
+               \infer[_{(ECaseInl)}]{\ccase{\inl{v}}{x}{t}{x'}{t'} \to [x\mapsto v]\:t}{}\\ \\
+               \infer[_{(ECaseInr)}]{\ccase{\inr{v}}{x}{t}{x'}{t'} \to [x'\mapsto v]\:t'}{}\\ \\
+               \infer[_{(EInl)}]{\inl{t}\to\inl{t'}}{t \to t'} \\ \\
+               \infer[_{(EInr)}]{\inr{t}\to\inr{t'}}{t \to t'}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXXVII)}
+      \begin{block}{Semântica}
+         \[
+            \begin{array}{c}
+          \infer[_{(ECase)}]{\ccase{y}{x}{t}{x'}{t'} \to \ccase{y'}{x}{t}{x'}{t'}}{y \to y'}\\ \\
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXXVIII)}
+      \begin{block}{Sistemas de tipos}
+         \[
+             \begin{array}{c}
+                \infer[_{(TInl)}]{\Gamma\vdash\inl{t} : \tau + \tau'}
+                                 {\Gamma\vdash t : \tau} \\ \\
+                \infer[_{(TInr)}]{\Gamma\vdash\inr{t} : \tau + \tau'}
+                                 {\Gamma\vdash t : \tau'} \\ \\
+                \infer[_{(TCase)}]{\Gamma\vdash\ccase{e}{x}{t}{x'}{t'} : \tau}
+                 {\Gamma \vdash e : \tau_1 + \tau_2 &
+                  \Gamma, x : \tau_1 \vdash t : \tau &
+                  \Gamma, x' : \tau_2 \vdash t' : \tau}
+             \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XXXIX)}
+      \begin{block}{Alterações na sintaxe núcleo}
+         \begin{spec}
+ data Ty = ...
+           | Ty :+: Ty
+           deriving (Eq, Ord, Show)
 
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XL)}
+      \begin{block}{Alterações na sintaxe núcleo}
+         \begin{spec}
+ data Term =
+...
+   Inl Term | Inr Term |
+   Case Term Name Term Name Term
+   deriving (Eq, Ord, Show)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLI)}
+      \begin{block}{Alterações na sintaxe estendida}
+         \begin{spec}
+ data XTerm  =
+...
+   XInl XTerm Ty |
+   XInr XTerm Ty |
+   XCase XTerm Ty Name XTerm Name XTerm
+   deriving (Eq, Ord, Show)
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLII)}
+      \begin{block}{Verificação de tipos e elaboração}
+        \begin{spec}
+ check (XInl t ty)
+      = do
+         (e, ty') <- check t
+         return (Inl e, ty' :+: ty)
+ check (XInr t ty)
+      = do
+         (e, ty') <- check t
+         return (Inr e, ty :+: ty')
+        \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLIII)}
+     \begin{block}{Verificação de tipos e elaboração}
+        \begin{spec}
+ check (XCase t ty n' t' n'' t'')
+      = do
+         (e, ty1) <- check t
+         let v = unfoldSum ty1
+         when (isNothing v)
+              (sumExpected ty1)
+         let (l,r) = fromJust v
+         (e',tyl) <- local (extendEnv n' l) (check t')
+         (e'',tyr) <- local (extendEnv n'' r) (check t'')
+         when (tyl /= tyr) (typeMismatch tyl tyr)
+         return (Case e n' e' n'' e'', tyl)
+        \end{spec}
+     \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLIV)}
+     \begin{block}{Recursão}
+        \begin{itemize}
+            \item Última extensão que estudaremos.
+            \item Permite a escrita de funções recursivas irrestritas.
+            \begin{itemize}
+               \item O $\lambda$-cálculo possui normalização forte.
+            \end{itemize}
+        \end{itemize}
+     \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLV)}
+      \begin{block}{Modificações na sintaxe núcleo}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & \fix{t} & \text{ponto fixo}\\
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLVI)}
+      \begin{block}{Modificações na sintaxe estendida}
+          \[
+             \begin{array}{lclr}
+                t & ::=   & ... & \text{termos} \\
+                  &  \mid & \lletrec{x = t}{t'} & \text{função recursiva}\\
+              \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLVII)}
+      \begin{block}{Semântica}
+          \[
+            \fix{\lambda x : \tau . t}\to [x \mapsto \fix{\lambda x : \tau . t}]\: t
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (XLVIII)}
+      \begin{block}{Elaboração}
+         \[
+      \llet{x :\tau_1 = t}{t'} \deff \llet{x  = \fix{\lambda x : \tau_1.t}}{t'}
+         \]
+      \end{block}
+   \end{frame}
 \end{document}
