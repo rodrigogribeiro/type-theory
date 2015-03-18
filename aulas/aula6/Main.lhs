@@ -121,7 +121,8 @@ Terms and types structures
 >   Pair Term Term |
 >   Fst Term | Snd Term |
 >   Inl Term | Inr Term |
->   Case Term Name Term Name Term
+>   Case Term Name Term Name Term |
+>   Fix Term
 >   deriving (Eq, Ord, Show)
 
 
@@ -139,7 +140,8 @@ Terms and types structures
 >   XSnd XTerm |
 >   XInl XTerm Ty |
 >   XInr XTerm Ty |
->   XCase XTerm Ty Name XTerm Name XTerm
+>   XCase XTerm Ty Name XTerm Name XTerm |
+>   XLetRec Name Ty XTerm XTerm
 >   deriving (Eq, Ord, Show)
 
 Type checking and elaboration structures
@@ -274,6 +276,11 @@ Type checking and elaboration algorithm
 >         (e'',tyr) <- local (extendEnv n'' r) (check t'')
 >         when (tyl /= tyr) (typeMismatch tyl tyr)
 >         return (Case e n' e' n'' e'', tyl)
+> check (XLetRec n ty t t')
+>      = do
+>          (e,ty') <- local (extendEnv n ty) (check t)
+>          (e',ty'') <- local (extendEnv n (ty :-> ty')) (check t')
+>          return (App (Lam n ty e') (Fix (Lam n ty e)), ty'')
 
 
 > unfoldSum :: Ty -> Maybe (Ty , Ty)
@@ -877,8 +884,48 @@ data XTerm =
    \begin{frame}{Extensões --- (XLVIII)}
       \begin{block}{Elaboração}
          \[
-      \llet{x :\tau_1 = t}{t'} \deff \llet{x  = \fix{\lambda x : \tau_1.t}}{t'}
+      \lletrec{x :\tau_1 = t}{t'} \deff \llet{x  = \fix{\lambda x : \tau_1.t}}{t'}
          \]
       \end{block}
    \end{frame}
+   \begin{frame}{Extensões --- (XLIX)}
+      \begin{block}{Sistema de tipos}
+         \[
+             \infer[_{(TLetrec)}]{\Gamma\vdash \lletrec{x : \tau' \to \tau_1  = t}{t'} : \tau}
+                                 {\Gamma , x : \tau'\vdash t : \tau_1 & \Gamma , x : \tau'\to \tau_1 \vdash t' : \tau}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (L)}
+      \begin{block}{Alterações na sintaxe núcleo}
+        \begin{spec}
+ data Term =
+...
+ |  Fix Term
+   deriving (Eq, Ord, Show)
+        \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (LI)}
+      \begin{block}{Alterações na sintaxe estendida}
+        \begin{spec}
+ data XTerm  =
+...
+ | XLetRec Name Ty XTerm XTerm
+   deriving (Eq, Ord, Show)
+        \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Extensões --- (LII)}
+      \begin{block}{Verificação de tipos e elaboração}
+         \begin{spec}
+ check (XLetRec n ty t t')
+      = do
+          (e,ty') <- local (extendEnv n ty) (check t)
+          (e',ty'') <- local (extendEnv n (ty :-> ty')) (check t')
+          return (App (Lam n ty e') (Fix (Lam n ty e)), ty'')
+         \end{spec}
+      \end{block}
+   \end{frame}
 \end{document}
+ 
