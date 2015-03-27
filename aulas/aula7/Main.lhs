@@ -87,7 +87,25 @@
 \newcommand{\norm}[2]{\ensuremath{\texttt{Norm}_{#1}(#2)}}
 
 %if False
+
+> {-# LANGUAGE GADTs, KindSignatures #-}
+
 > module Main where
+
+> data Term :: * -> * where
+>   TTrue  :: Term Bool
+>   TFalse :: Term Bool
+>   Lift   :: a -> Term a
+>   Abs    :: (Term a -> Term b) -> Term (a -> b)
+>   App    :: Term (a -> b) -> Term a -> Term b
+
+> eval :: Term t -> t
+> eval TTrue = True
+> eval TFalse = False
+> eval (Lift v) = v
+> eval (Abs f) = \x -> eval (f (Lift x))
+> eval (App l r) = (eval l) (eval r)
+
 %endif
 
 \begin{document}
@@ -194,6 +212,41 @@
    \begin{frame}{Normalização --- (XI)}
       \begin{block}{Normalização}
           \textbf{Teorema}: Se $\vdash t : \tau$ então existe $n\in\mathbb{N}$ e $v$ tais que $t \Rightarrow^n v$ e $v$ é um valor.
+      \end{block}
+   \end{frame}
+   \begin{frame}{Normalização --- (XII)}
+      \begin{block}{Implementação}
+         \begin{itemize}
+            \item Normalização por avaliação.
+            \begin{itemize}
+               \item Uso do próprio mecanismo de Haskell para executar a avaliação
+               \item Uso de duas extensões GADTs e KindSignatures.
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Normalização --- (XIII)}
+      \begin{block}{Sintaxe tipada}
+         \begin{spec}
+ data Term :: * -> * where
+   TTrue  :: Term Bool
+   TFalse :: Term Bool
+   Lift   :: a -> Term a
+   Abs    :: (Term a -> Term b) -> Term (a -> b)
+   App    :: Term (a -> b) -> Term a -> Term b
+         \end{spec}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Normalização --- (XIV)}
+      \begin{block}{Normalização por avaliação}
+         \begin{spec}
+ eval :: Term t -> t
+ eval TTrue = True
+ eval TFalse = False
+ eval (Lift v) = v
+ eval (Abs f) = \x -> eval (f (Lift x))
+ eval (App l r) = (eval l) (eval r)
+         \end{spec}
       \end{block}
    \end{frame}
 \end{document}
