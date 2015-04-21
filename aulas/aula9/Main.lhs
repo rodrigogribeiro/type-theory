@@ -91,6 +91,10 @@
 \newcommand{\assign}[2]{\ensuremath{#1\:\texttt{:=}\:#2}}
 \newcommand{\dom}[1]{\ensuremath{dom(#1)}}
 
+\newcommand{\err}[0]{\texttt{error }}
+\newcommand{\tryy}[2]{\ensuremath{\texttt{try }#1\texttt{ with }#2}}
+\newcommand{\raisee}[1]{\ensuremath{\texttt{raise }#1}}
+
 %if False
 
 > module Main where
@@ -122,6 +126,130 @@
               \item O segundo exceções retornam valores que permitem explicar o que ocasionou a exceção.
             \end{itemize}
          \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (III)}
+      \begin{block}{Exceções sem valores --- sintaxe}
+         \[
+            \begin{array}{lcl}
+               t & ::= & ... \\
+                 & \mid & error \\
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (IV)}
+      \begin{block}{Exceções sem valores --- semântica}
+         \[
+            \begin{array}{c}
+               \infer[_{(EAppErr_1)}]{\err t_2 \Rightarrow \err}{} \\ \\
+               \infer[_{(EAppErr_2)}]{v_1\:\err \Rightarrow \err}{}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (V)}
+      \begin{block}{Exceções sem valores --- sistema de tipos}
+         \[
+            \begin{array}{c}
+               \infer[_{(TError)}]{\Gamma\vdash\err : \tau}{}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (VI)}
+      \begin{block}{Peculiaridades}
+         \begin{itemize}
+            \item A semântica aborta a execução tão logo um valor \err apareça.
+            \item O termo \err possui qualquer tipo.
+            \begin{itemize}
+               \item Caso o sistema possua polimorfismo paramétrico, \err pode ter o tipo $\forall \alpha. \alpha$.
+               \item Caso o sistema possua subtipagem, \err pode ter o tipo $\bot$, que é subtipo de todo tipo $\tau$.
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (VII)}
+      \begin{block}{Tratamento de exceções --- sintaxe}
+         \[
+            \begin{array}{lcl}
+               t & ::= & ... \\
+                 & \mid & \tryy{t}{t}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (VIII)}
+      \begin{block}{Semântica}
+        \[
+            \begin{array}{c}
+            \infer[_{(ETryV)}]{\tryy{v_1}{t_2}\Rightarrow v_1}{} \\ \\
+            \infer[_{(ETryErr)}]{\tryy{\err}{t_2}\Rightarrow t_2}{} \\ \\
+            \infer[_{(ETry)}]{\tryy{t_1}{t_2}\Rightarrow\tryy{t_1'}{t_2}}{t_1\Rightarrow t_1'}
+            \end{array}
+        \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (IX)}
+      \begin{block}{Sistema de tipos}
+         \[
+            \begin{array}{c}
+               \infer[_{(TTry)}]{\Gamma\vdash\tryy{t_1}{t_2}}{\Gamma\vdash t_1 : \tau & \Gamma \vdash t_2 : \tau}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (X)}
+      \begin{block}{Alguns problemas com este design}
+         \begin{itemize}
+            \item Estas exceções não retornam valores, logo, fica difícil ``identificar'' o que aconteceu.
+            \item Ideal: Assim como Java e C, exceções podem retornar valores que ajudam a
+                  descobrir o que ocorreu ou a dar melhores mensagens de erro.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (XI)}
+      \begin{block}{Exceções com valores --- sintaxe}
+         \[
+            \begin{array}{lcl}
+                t & ::= & ...\\
+                  & \mid & \tryy{t}{t}\\
+                  & \mid & \raisee{t}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (XII)}
+      \begin{block}{Exceções com valores --- semântica}
+         \[
+            \begin{array}{c}
+               \infer[_{(EAppRaise_1)}]{(\raisee{v})\,t \Rightarrow \raisee{v}}{} \\ \\
+               \infer[_{(EAppRaise_2)}]{v\,(\raisee{v'}) \Rightarrow \raisee{v'}}{} \\ \\
+               \infer[_{(ERaise)}]{\raisee{t}\Rightarrow\raisee{t'}}{t\Rightarrow t'} \\ \\
+               \infer[_{(ERaiseRaise)}]{\raisee{(\raisee{v})} \Rightarrow \raisee{v}}{}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (XIII)}
+      \begin{block}{Semântica}
+        \[
+            \begin{array}{c}
+            \infer[_{(ETryV)}]{\tryy{v_1}{t_2}\Rightarrow v_1}{} \\ \\
+            \infer[_{(ETryRaise)}]{\tryy{\raisee{v}}{t_2}\Rightarrow t_2\: v}{} \\ \\
+            \infer[_{(ETry)}]{\tryy{t_1}{t_2}\Rightarrow\tryy{t_1'}{t_2}}{t_1\Rightarrow t_1'}
+            \end{array}
+        \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Exceções --- (XIV)}
+      \begin{block}{Sistema de tipos}
+         \[
+            \begin{array}{c}
+               \infer[_{(TRaise)}]{\Gamma \vdash \raisee{t} : \tau}{\Gamma \vdash t : \tau_{err}} \\ \\
+               \infer[_{(TTry)}]{\Gamma\vdash \tryy{t_1}{t_2} : \tau}{\Gamma \vdash t_1 : \tau & \Gamma \vdash t_2 : \tau_{err}\to \tau}
+            \end{array}
+         \]
       \end{block}
    \end{frame}
 \end{document}
