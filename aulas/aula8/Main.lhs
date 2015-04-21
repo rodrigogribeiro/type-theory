@@ -265,12 +265,77 @@ succ (! s)
          \end{itemize}
       \end{block}
    \end{frame}
-   \begin{frame}{Referências --- (XV)}
+   \begin{frame}{Referências --- (XVI)}
       \begin{block}{Tipagem}
          \begin{itemize}
-            \item Mas, ainda resta uma questão: Como verificar tipos de referências?
-            \item Idealmente, uma referência deve armazenar valores de um único tipo. Como fazer isso?
+            \item Uma possível idéia, seria utilizar $\mu$ na relação de tipos.
+            \item Alguns problemas:
+            \[
+              \begin{array}{cc}
+                  \begin{array}{lcl}
+                     l_1 & \mapsto & \lambda x : \Nat. 999 \\
+                     l_2 & \mapsto & \lambda x : \Nat. (\dereff{l_1})\:x \\
+                     l_3 & \mapsto & \lambda x : \Nat. (\dereff{l_2})\:x \\
+                     l_4 & \mapsto & \lambda x : \Nat. (\dereff{l_3})\:x \\
+                  \end{array}
+                  &
+                  \begin{array}{lcl}
+                     l_1 & \mapsto & \lambda x : \Nat. (\dereff{l_2})\:x \\
+                     l_2 & \mapsto & \lambda x : \Nat. (\dereff{l_1})\:x \\
+                  \end{array}
+              \end{array}
+            \]
          \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Referências --- (XVII)}
+      \begin{block}{Tipagem --- Solução}
+         \begin{itemize}
+            \item Solução: Usar um environment para armazenar o tipo armazenado na
+                  referência quando da sua criação.
+            \item Para isso, vamos usar um environment $\Sigma$ que associa a cada endereço o tipo de valores
+                  que pode nele ser armazenado.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Referências --- (XVIII)}
+      \begin{block}{Sistema de tipos}
+         \[
+            \begin{array}{c}
+               \infer[_{(TUnit)}]{\Gamma\,\mid\,\Sigma\vdash\unit : \Unit}{} \\ \\
+               \infer[_{(TVar)}]{\Gamma\,\mid\,\Sigma\vdash x : \tau}{x : \tau \in \Gamma} \\ \\
+               \infer[_{(TAbs)}]{\Gamma\,\mid\,\Sigma\vdash \lambda x : \tau'. t : \tau' \to \tau}{\Gamma, x : \tau'\,\mid\,\Sigma\vdash t : \tau} \\ \\
+               \infer[_{(TApp)}]{\Gamma\,\mid\,\Sigma\vdash t\: t' : \tau}{\Gamma\,\mid\Sigma\vdash t : \tau' \to \tau & \Gamma\,\mid\Sigma\vdash t' : \tau'}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Referências --- (XIX)}
+      \begin{block}{Sistema de tipos}
+         \[
+            \begin{array}{c}
+               \infer[_{(TLoc)}]{\Gamma\,\mid\,\Sigma\vdash l : \Reff{\tau}}{\Sigma(l) = \tau} \\ \\
+               \infer[_{(TRef)}]{\Gamma\,\mid\,\Sigma\vdash \reff{t} : \Reff{\tau}}{\Gamma\,\mid\,\Sigma\vdash t : \tau} \\ \\
+               \infer[_{(TDeref)}]{\Gamma\,\mid\,\Sigma\vdash\dereff{t} : \tau}{\Gamma\,\mid\,\Sigma\vdash t : \Reff{\tau}}\\ \\
+               \infer[_{(TAssign)}]{\Gamma\,\mid\,\Sigma\vdash\assign{t_1}{t_2} : \Unit}{\Gamma\,\mid\,\Sigma\vdash t_1 : \Reff{\tau} & \Gamma\,\mid\,\Sigma\vdash t_2 : \tau}
+            \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Referências --- (XX)}
+      \begin{block}{Environment bem tipado}
+         Um environment $\mu$ é dito ser bem tipado com respeito a $\Gamma$ e $\Sigma$, $\Gamma\,\mid\,\Sigma\vdash\mu$, se $\dom{\mu} = \dom{\Sigma}$
+         e $\forall l. l\in \dom{\mu} \to \Gamma\,\mid\,\Sigma\vdash\mu(l) : \Sigma(l)$.
+      \end{block}
+   \end{frame}
+   \begin{frame}{Referências --- (XXI)}
+      \begin{block}{Preservação}
+          Se $\Gamma\,\mid\,\Sigma\vdash t : \tau$ e $\Gamma\,\mid\,\Sigma\vdash \mu$ e $t\,\mid\,\mu\Rightarrow t'\,\mid\,\mu'$ então, para algum
+          $\Sigma \subseteq \Sigma'$, $\Gamma\,\mid\,\Sigma'\vdash t : \tau$ e $\Gamma\,\mid\,\Sigma'\vdash \mu'$.
+      \end{block}
+      \begin{block}{Progresso}
+          Suponha que $\emptyset \,\mid\,\Sigma\vdash t : \tau$. Então, $t$ é um valor ou então para qualquer $\mu$ tal que $\emptyset\,\mid\,\Sigma\vdash \mu$, existem
+          $t'$ e $\mu'$ tais que $t \,\mid\,\mu\Rightarrow t'\,\mid\,\mu'$.
       \end{block}
    \end{frame}
 \end{document}
