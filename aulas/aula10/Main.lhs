@@ -96,6 +96,8 @@
 \newcommand{\raisee}[1]{\ensuremath{\texttt{raise }#1}}
 
 \newcommand{\subb}[2]{\ensuremath{#1\,<:\,#2}}
+\newcommand{\intt}[0]{\ensuremath{\texttt{Int}}}
+\newcommand{\floatt}[0]{\ensuremath{\texttt{Float}}}
 
 %if False
 
@@ -157,5 +159,72 @@
            \end{array}
         \]
      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (V)}
+     \begin{block}{Relação de subtipagem}
+        \[
+           \begin{array}{c}
+              \infer[_{(IntFloat)}]{\subb{\intt}{\floatt}}{}
+           \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (VI)}
+     \begin{block}{Registros}
+        \begin{itemize}
+           \item As regras de subtipagem, são bem triviais, de um ponto de vista teórico.
+           \item A subtipagem fica mais interessante ao considerarmos registros.
+           \begin{itemize}
+               \item Registros servem como preparação para formalização de linguagens O.O. como Java.
+           \end{itemize}
+        \end{itemize}
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (VII)}
+     \begin{block}{Registros --- sintaxe}
+        \[
+            \begin{array}{lcl}
+               t & ::= & ... \\
+                 & \mid & \{l_i = t_i\}^{i = 1..n} \\
+                 & \mid & t.l \\
+               v & ::= & ... \\
+                 & \mid & {l_i = v_i}^{i = 1..n} \\
+            \tau & ::= & ... \\
+                 & \mid & \{l_i : \tau_i\}^{i = 1..n}\\
+            \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (VIII)}
+     \begin{block}{Registros --- semântica}
+        \[
+           \begin{array}{cc}
+              \infer[_{(EProjRcd)}]{\{l_i = v_i\}^{i = 1..n}.l_j \Rightarrow v_j} &
+              \infer[_{(EProj)}]{t_1.l \Rightarrow t_1'.l}{t_1 \Rightarrow t_1'} \\ \\
+              \multicolumn{2}{c}{\infer[_{(ERcd)}]{\{...,l_j = t_j,...\}\Rightarrow\{...,l_j = t_j',...\}}{t_j\Rightarrow t_j'}}
+           \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (IX)}
+     \begin{block}{Registros --- sistema de tipos}
+        \[
+           \begin{array}{c}
+              \infer[_{(TRcd)}]{\Gamma\vdash\{ l_i : \tau_i\}^{i=1..n}}{\forall i.i\in\{1..n\} \to \Gamma\vdash t_i : \tau_i} \\ \\
+              \infer[_{(TProj)}]{\Gamma\vdash\{ l_i : \tau_i\}^{i=1..n}.t_j : \tau_j}{\Gamma\vdash\{ l_i : \tau_i\}^{i=1..n} : \{l_i : \tau_i\}^{i = 1..n}}
+           \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (X)}
+      \begin{block}{Relação de subtipagem para registros}
+         \[
+             \begin{array}{c}
+                \infer[_{(SRecWidth)}]{\subb{\{l_i : \tau_i\}^{i = 1..n+k}}{\{l_i : \tau_i\}^{i = 1..n}}}{} \\ \\
+                \infer[_{(SRecDepth)}]{\subb{\{l_i : \tau_i\}^{i = 1..n}}{\{l_i : \tau_i'\}^{i = 1..n}}}{\subb{\tau_i}{\tau_i'}^{i = 1..n}} \\ \\
+                \infer[_{(SRecPerm)}]{\subb{\{k_i : \tau_i\}^{i = 1..n}}{\{l_j : \tau_j\}^{j = 1..n}}}{\{k_i : \tau_i\}^{i = 1..n}\text{ \'e uma permutação de }\{l_j : \tau_j\}^{j = 1..n}}
+             \end{array}
+         \]
+      \end{block}
    \end{frame}
 \end{document}
