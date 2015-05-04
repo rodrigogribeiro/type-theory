@@ -5,6 +5,9 @@
 \usepackage{amsmath,amsfonts,amssymb,amsthm}
 \usepackage{proof}
 \usepackage{color}
+\usepackage{listings}
+
+\lstset{language = Java}
  
 \usetheme{Luebeck}
  
@@ -98,6 +101,7 @@
 \newcommand{\subb}[2]{\ensuremath{#1\,<:\,#2}}
 \newcommand{\intt}[0]{\ensuremath{\texttt{Int}}}
 \newcommand{\floatt}[0]{\ensuremath{\texttt{Float}}}
+\newcommand{\arrayy}[1]{\ensuremath{\texttt{Array }#1}}
 
 %if False
 
@@ -226,5 +230,78 @@
              \end{array}
          \]
       \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XI)}
+      \begin{block}{Subtipagem e Anotações de tipos}
+         \begin{itemize}
+            \item Anotações, em linguagens sem subtipagem, são semanticamente inócuas.
+            \item Em linguagens com subtipagem, a situação é mais interessante.
+            \begin{itemize}
+               \item Permite \emph{up-casts} e \emph{down-casts}.
+               \item Up-cast: Coerção para um super-tipo (verificável).
+               \item Down-cast: Coerção insegura. Tentar anotar um valor com um subtipo de seu tipo real.
+                                Porém, isso pode acarretar erros em tempo de execução --- Em Java: ClassCastException.
+            \end{itemize}
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XII)}
+      \begin{block}{Progresso e Down-casts}
+         \begin{itemize}
+            \item Down-casts podem comprometer o progresso.
+            \[
+                 \infer[_{(EDownCast)}]{v_1 : \tau \Rightarrow v_1}{\vdash v_1 : \tau' & \subb{\tau}{\tau'}}
+            \]
+            \item Exemplo:
+            \[
+               \begin{array}{cc}
+                  \lambda x : \top. (x : \{a : \Nat\}).a & \{a = 5 , b = true\}
+               \end{array}
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XIII)}
+      \begin{block}{Type case}
+         \begin{itemize}
+            \item Operador de teste de tipo dinâmico (instanceof em Java)
+            \item Muito usado em versões antigas da linguagem, antes desta incorporar polimorfismo paramétrico.
+            \item Pode funcionar como uma possível solução para reobter progresso.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XIV)}
+      \begin{block}{Subtipagem e Referências}
+         \begin{itemize}
+            \item Referências devem ser invariantes:
+            \[
+                \infer[_{(SRef)}]{\subb{\Reff{\tau_1}}{\Reff{\tau_2}}}{\subb{\tau_1}{\tau_2} & \subb{\tau_2}{\tau_1}}
+            \]
+            \item Subtipagem (registros) pode causar problemas com leitura e escrita de referências.
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XV)}
+      \begin{block}{Subtipagem e arrays}
+         \begin{itemize}
+            \item Regra ideal, é similar a referências.
+            \[
+                \infer[_{(SArray)}]{\subb{\arrayy{\tau_1}}{\arrayy{\tau_2}}}{\subb{\tau_1}{\tau_2} & \subb{\tau_2}{\tau_1}}
+            \]
+            \item Java permite a seguinte regra mais liberal:
+            \item Regra ideal, é similar a referências.
+            \[
+                \infer[_{(SArray)}]{\subb{\arrayy{\tau_1}}{\arrayy{\tau_2}}}{\subb{\tau_1}{\tau_2}}
+            \]
+         \end{itemize}
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XVI)}
+     \begin{block}{Why Java arrays sucks!}
+       \begin{flushleft}
+        Object[] s = new Integer[4];\\
+        s[0] = 4.4;
+      \end{flushleft}
+     \end{block}
    \end{frame}
 \end{document}
