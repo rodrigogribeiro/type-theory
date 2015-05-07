@@ -5,6 +5,7 @@
 \usepackage{amsmath,amsfonts,amssymb,amsthm}
 \usepackage{proof}
 \usepackage{color}
+\usepackage{stmaryrd}
 \usepackage{listings}
 
 \lstset{language = Java}
@@ -303,5 +304,70 @@
         s[0] = 4.4;
       \end{flushleft}
      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XVII)}
+     \begin{block}{Semântica de coerção}
+        \begin{itemize}
+           \item Traduzir termos de uma linguagem com subtipagem para uma sem.
+           \item Formalmente, a tradução consiste de 3 funções:
+           \begin{itemize}
+              \item Uma para traduzir tipos.
+              \item Uma para traduzir derivações de subtipagem.
+              \item Uma para traduzir derivações de tipos.
+           \end{itemize}
+        \end{itemize}
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XVIII)}
+     \begin{block}{Traduzindo tipos}
+        \[
+           \begin{array}{lcl}
+             \llbracket \top \rrbracket & = & \Unit\\
+             \llbracket \tau_1\to\tau_2 \rrbracket & = & \llbracket \tau_1 \rrbracket \to \llbracket \tau_2 \rrbracket \\
+             \llbracket \{l_i : \tau_i\} \rrbracket & = & \{l_i : \llbracket \tau_i \rrbracket \}\\
+           \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XIX)}
+     \begin{block}{Traduzindo subtipagem}
+        \[
+           \begin{array}{lcl}
+             \left\llbracket \infer[_{(SRefl)}]{\subb{\tau}{\tau}}{} \right\rrbracket & = & \lambda x : \llbracket \tau \rrbracket . x \\
+             \\
+             \left\llbracket \infer[_{(STop)}]{\subb{\tau}{\top}}{} \right\rrbracket & = & \lambda x : \llbracket \tau \rrbracket . unit \\
+             \\
+             \left\llbracket \infer[_{(STrans)}]{\subb{\tau_1}{\tau_3}}{\dfrac{C_1}{\subb{\tau_1}{\tau_2}} & \dfrac{C_2}{\subb{\tau_2}{\tau_3}}} \right\rrbracket & = &
+                 \lambda x : \llbracket \tau \rrbracket . \llbracket C_2 \rrbracket (\llbracket C_1 \rrbracket x)\\
+           \end{array}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XX)}
+     \begin{block}{Traduzindo subtipagem}
+        \[
+          \footnotesize{
+           \begin{array}{lcl}
+             \left\llbracket \infer[_{(SArrow)}]{\subb{\tau_1\to\tau_2}{\tau_1'\to\tau_2'}}
+                                                {\dfrac{C_1}{\subb{\tau_1'}{\tau_1}} & \dfrac{C_2}{\subb{\tau_2}{\tau_2'}}}
+             \right\rrbracket & = & \lambda f : \llbracket \tau_1\to\tau_2 \rrbracket.\lambda x : \llbracket \tau_1' \rrbracket . \llbracket C_2 \rrbracket (f (\llbracket C_1 \rrbracket x)) \\
+             \\
+           \end{array} }
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXI)}
+     \begin{block}{Traduzindo subtipagem}
+        \[
+          \tiny{
+           \begin{array}{lcl}
+             \left\llbracket \infer[_{(SRecWidth)}]{\subb{\{l_i : \tau_i\}^{i \in 1.. n + k}}{\{l_i : \tau_i\}^{i \in 1.. n}}}{}\right\rrbracket & = &
+                 \lambda r : \{l_i : \tau_i\}^{i \in 1.. n + k}.\{l_i = r . l_i^{i = 1..n}\} \\ \\
+ 
+           \end{array}}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXII)}
    \end{frame}
 \end{document}
