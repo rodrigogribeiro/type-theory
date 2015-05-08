@@ -9,9 +9,9 @@
 \usepackage{listings}
 
 \lstset{language = Java}
- 
+
 \usetheme{Luebeck}
- 
+
 \title{Subtipagem}
 \subtitle{Teoria de Tipos}
 \author[Prof. Rodrigo Ribeiro]{Prof. Rodrigo Ribeiro}
@@ -363,11 +363,70 @@
            \begin{array}{lcl}
              \left\llbracket \infer[_{(SRecWidth)}]{\subb{\{l_i : \tau_i\}^{i \in 1.. n + k}}{\{l_i : \tau_i\}^{i \in 1.. n}}}{}\right\rrbracket & = &
                  \lambda r : \{l_i : \tau_i\}^{i \in 1.. n + k}.\{l_i = r . l_i^{i = 1..n}\} \\ \\
- 
+             \left\llbracket \infer[_{(SRecDepth)}]{\subb{\{l_i : \tau_i\}^{i \in 1..n}}{\{l_i : \tau_i'\}^{i \in 1..n}}}{\forall i. \dfrac{C_i}{\subb{\tau_i}{\tau_i'}}} \right\rrbracket & = &
+               \lambda r : \{l_i : \llbracket \tau_i \rrbracket\}.\{l_i = r . l_i^{i \in 1..n}\}
            \end{array}}
         \]
      \end{block}
    \end{frame}
    \begin{frame}{Subtipagem --- (XXII)}
+     \begin{block}{Traduzindo subtipagem}
+        \[
+            \tiny{
+            \begin{array}{lcl}
+               \left\llbracket \infer[_{(SRecPerm)}]{\subb{\{l_i : \tau_i\}^{i \in 1..n}}{\{l_i : \tau_i'\}^{i\in 1..n}}}
+                                                    {\{l_i : \tau_i\}^{i \in 1..n}\text{ permutação de }\{l_i : \tau_i'\}^{i \in 1..n}}
+                                                    \right\rrbracket & = &
+                                                    \lambda r : \{l_i : \llbracket \tau_i \rrbracket\}^{i \in 1..n}.
+                                                     \{l_i = r.l_i^{i \in 1..n}\}
+            \end{array}}
+        \]
+     \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXIII)}
+      \begin{block}{Traduzindo tipagens}
+          \[
+               \begin{array}{lcl}
+                  \left\llbracket \infer[_{(VAR)}]{\Gamma \vdash x : \tau}{x : \tau \in \Gamma} \right \rrbracket & = & x\\ \\
+                  \left\llbracket \infer[_{(ABS)}]{\Gamma \vdash \lambda x : \tau' . e : \tau' \to \tau}{C_1 :: \Gamma , x : \tau' \vdash e : \tau} \right\rrbracket& = &
+                       \lambda x : \llbracket \tau' \rrbracket . \llbracket C_1 \rrbracket \\ \\
+                  
+               \end{array}
+          \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXIV)}
+      \begin{block}{Traduzindo tipagens}
+         \[
+              \begin{array}{lcl}
+                 \left \llbracket \infer[_{(App)}]{\Gamma\vdash e \: e' : \tau}{C_1 :: \Gamma\vdash e : \tau'\to\tau & C_2 :: \Gamma\vdash e' : \tau}\right \rrbracket & = &
+                    \llbracket C_1 \rrbracket \: \llbracket C_2 \rrbracket \\ \\
+                 \left \llbracket \infer[_{(Rcd)}]{\Gamma\vdash \{l_i = e_i\} : \{l_i : \tau_i\}^{i\in 1..n}}{\forall i. C_i :: \Gamma \vdash e_i : \tau_i} \right \rrbracket & = &
+                     \{l_i : \llbracket C_i \rrbracket \}^{i \in 1..n} \\ \\
+              \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXV)}
+      \begin{block}{Traduzindo tipagens}
+         \[
+             \begin{array}{lcl}
+                \left \llbracket \infer[_{(Proj)}]{\Gamma \vdash e . l_j : \tau_j}{C_1 :: \Gamma \vdash e : \{l_i : \tau_i\}^{i \in 1..n}} \right \rrbracket & = &
+                       \llbracket C_1 \rrbracket.l_j \\ \\
+                \left \llbracket \infer[_{(Sub)}]{\Gamma \vdash  e : \tau}{C_1 :: \Gamma \vdash e : \tau' & C_2 :: \subb{\tau'}{\tau}} \right \rrbracket & = &
+                       \llbracket C_1 \rrbracket \:\: \llbracket C_2 \rrbracket
+             \end{array}
+         \]
+      \end{block}
+   \end{frame}
+   \begin{frame}{Subtipagem --- (XXVI)}
+      \begin{block}{Coerência}
+        \begin{itemize}
+           \item Como a regra SUB pode ser aplicada a qualquer termo, temos que um mesmo termo pode ter diferentes derivações.
+           \item Desta forma, se definimos a semântica em termos da derivação de tipos, como garantir que diferentes derivações possuem a mesma semântica?
+           \item Dizemos que uma tradução é coerente, se dadas duas derivações de $\Gamma\vdash e : \tau$, $C_1$ e $C_2$, temos que
+           \[\llbracket C_1 \rrbracket \approx \llbracket C_2 \rrbracket \]
+        \end{itemize}
+      \end{block}
    \end{frame}
 \end{document}
