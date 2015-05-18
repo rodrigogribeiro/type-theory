@@ -8,6 +8,7 @@ algorithm for Core ML.
 
 > import Control.Monad.State
 
+> import Data.List
 > import Data.Monoid
 > import Data.Map(Map)
 > import qualified Data.Map as Map
@@ -59,7 +60,7 @@ Interpreter definition
 >      = do
 >          st <- get
 >          mod <- hoistError $ parser  src
->          tyctx' <- hoistError $ tc (typeEnv st) mod
+>          tyctx' <- hoistError $ inference (typeEnv st) mod
 >          let st' = st {
 >                         termEnv = foldl' evalDef (termEnv st) mod
 >                       , typeEnv = tyctx' <> typeEnv st
@@ -75,7 +76,7 @@ Interpreter definition
 > showOutput s st
 >            = do
 >                case Map.lookup (Name s) (typeEnv st) of
->                     Just ty -> liftIO $ putStrLn $ arg ++ "::" ++ pprint ty
+>                     Just ty -> liftIO $ putStrLn $ s ++ "::" ++ pprint ty
 >                     Nothing -> return ()
 
 > evalDef :: TermEnv -> (Name, Term) -> TermEnv
@@ -119,10 +120,10 @@ Tab completion
 > defaultMatcher :: MonadIO m => [(String, CompletionFunc m)]
 > defaultMatcher = [ (":load"  , fileCompleter) ]
 
-> comp :: (Monad m, MonadState IState m) => WordCompleter m
+> comp :: (Monad m, MonadState ShellState m) => WordCompleter m
 > comp n = do
 >            let cmds = [":load", ":browse", ":quit", ":type"]
->            TypeEnv ctx <- gets tyctx
+>            ctx <- gets typeEnv
 >            let defs = Map.keys ctx
 >            return $ filter (isPrefixOf n) (cmds ++ defs)
 
@@ -131,7 +132,7 @@ Tab completion
 >    ("load"   , load)
 >  , ("browse" , browse)
 >  , ("quit"   , quit)
->  , ("type"   , Main.typeof)
+>  , ("type"   , Main.typeOf)
 >  ]
 
 > completer :: CompleterStyle (StateT ShellState IO)

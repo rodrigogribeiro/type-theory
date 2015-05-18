@@ -20,6 +20,8 @@ Type inference engine
 > import Tc.TcMonad
 > import Tc.Subst
 
+> inference :: Ctx -> Term -> Either String (Tau, Subst)
+> inference ctx t = fst $ runTcM ctx (infer t)
 
 > infer :: Term -> TcM (Tau , Subst)
 > infer (Const c) = inferConst c

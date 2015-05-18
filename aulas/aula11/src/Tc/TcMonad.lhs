@@ -19,7 +19,10 @@ A type context is just a mapping between variables and types
 
 Definition of the type inference monad
 
-> type TcM a = ExceptT String (ReaderT Ctx (StateT Int Identity)) a
+> type TcM a =  ReaderT Ctx (ExceptT String (StateT Int Identity)) a
+
+> runTcM :: Ctx -> TcM a -> (Either String a, Int)
+> runTcM ctx tcm = runIdentity (runStateT (runExceptT (runReaderT tcm ctx)) 0)
 
 Creating a fresh type variable
 
