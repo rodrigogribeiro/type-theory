@@ -1,6 +1,3 @@
->{-# LANGUAGE FlexibleInstances #-}
->{-# LANGUAGE UndecidableInstances #-}
-
 Syntax definition for Core ML
 ===================
 
@@ -30,7 +27,7 @@ Term syntax
 
 > data Term = Var Name          |
 >             Abs Name Term     |
->             App Name Term     |
+>             App Term Term     |
 >             Const Lit         |
 >             Let Name Term Term
 >             deriving (Eq, Ord)
@@ -39,7 +36,9 @@ Term syntax
 Type syntax
 -----------
 
-> data Tau = TyVar Name     |
+> type Tyvar = Name
+
+> data Tau = TyVar Tyvar    |
 >            TInt           |
 >            TBool          |
 >            TChar          |
