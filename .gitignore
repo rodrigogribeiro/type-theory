@@ -10,3 +10,9 @@
 *.out
 *.tex
 *entregas
+.cabal.*
+cabal-*
+.cabal-*
+cabal.*
+.history*
+dist*
