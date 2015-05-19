@@ -9,9 +9,6 @@ Lexer for Core-ML
 
 > import Data.Functor.Identity
 
-> type Op a = Exp.Operator String () Identity a
-> type Operators a = Exp.OperatorTable String () Identity a
-
 > type Parser a = ParsecT String () Identity a
 
 > reservedNames :: [String]
@@ -35,13 +32,13 @@ Lexer for Core-ML
 >  , Tok.caseSensitive   = True
 >  }
 
-> reserved :: Parser ()
+> reserved :: String -> Parser ()
 > reserved = Tok.reserved lexer
 
-> reservedOp :: Parser ()
+> reservedOp :: String -> Parser ()
 > reservedOp = Tok.reservedOp lexer
 
-> identified :: Parser String 
+> identifier :: Parser String 
 > identifier = Tok.identifier lexer
 
 > parens :: Parser a -> Parser a
@@ -52,6 +49,9 @@ Lexer for Core-ML
 
 > semi :: Parser String
 > semi = Tok.semi lexer
+
+> charLit :: Parser Char
+> charLit = Tok.charLiteral lexer
 
 > contents :: Parser a -> Parser a
 > contents p = do

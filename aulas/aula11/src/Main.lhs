@@ -1,3 +1,5 @@
+> {-# LANGUAGE FlexibleContexts #-}
+
 Simple type inference for Core-ML
 =================================
 
@@ -6,7 +8,7 @@ algorithm for Core ML.
 
 > module Main where
 
-> import Control.Monad.State
+> import Control.Monad.State.Strict
 
 > import Data.List
 > import Data.Monoid
@@ -17,10 +19,11 @@ algorithm for Core ML.
 
 > import Eval.Eval
 
+> import Parser.Parser (parser)
+
 > import Tc.TcMonad
 > import Tc.Tc
 
-> import System.Environment
 > import System.Exit
 > import System.Console.Repline
 
@@ -30,14 +33,14 @@ Shell internal state
 > data ShellState = ShellState { typeEnv :: Ctx , termEnv :: TermEnv }
 
 > initState :: ShellState
-> initState = ShellState Map.empty
+> initState = ShellState (Ctx Map.empty) Map.empty
 
 Shell monad
 ------------
 
 > type Repl a = HaskelineT (StateT ShellState IO) a
 
-> hoistError :: Show a => Either String a -> Repl a
+> hoistError :: PPrint a => Either String a -> Repl a
 > hoistError (Left s)
 >            = do
 >                liftIO (print s)
@@ -55,35 +58,21 @@ Shell itself
 Interpreter definition
 ----------------------
 
-> exec :: Bool -> String -> Repl ()
-> exec upd src
+> exec :: String -> Repl ()
+> exec src
 >      = do
+>          let it = Name "it"
 >          st <- get
->          mod <- hoistError $ parser  src
->          tyctx' <- hoistError $ inference (typeEnv st) mod
->          let st' = st {
->                         termEnv = foldl' evalDef (termEnv st) mod
->                       , typeEnv = tyctx' <> typeEnv st
->                       }
->          when upd (put st')
->          case lookup "it" mod of
->               Nothing -> return ()
->               Just v  -> do
->                            let (val,_) = runEval (termEnv st') "it" v
->                            showOutput (show val) st'
-
-> showOutput :: String -> ShellState -> Repl ()
-> showOutput s st
->            = do
->                case Map.lookup (Name s) (typeEnv st) of
->                     Just ty -> liftIO $ putStrLn $ s ++ "::" ++ pprint ty
->                     Nothing -> return ()
-
-> evalDef :: TermEnv -> (Name, Term) -> TermEnv
-> evalDef env (n,t) = snd (runEval env n t)
+>          mod <- hoistError (parser src)
+>          t' <- hoistError (inference (typeEnv st) mod)
+>          let (val,_) = runEval (termEnv st) it mod
+>              m = pprint mod
+>              m' = pprint t'
+>          liftIO $ putStrLn $ (show m) ++ "::" ++ (show m')
+>          liftIO $ putStrLn $ (show val)
 
 > cmd :: String -> Repl ()
-> cmd src = exec True src
+> cmd src = exec src
 
 
 Interpreter commands
@@ -93,22 +82,22 @@ Interpreter commands
 > browse _
 >      = do
 >         st <- get
->         liftIO $ mapM_ putStrLn $ pprint (typeEnv st)
+>         liftIO $ mapM_ (putStrLn . show . pprint) (Map.elems $ unCtx $ typeEnv st)
 
 > load :: [String] -> Repl ()
 > load args
 >      = do
 >          cont <- liftIO $ readFile (unwords args)
->          exec True cont
+>          exec cont
 
 > typeOf :: [String] -> Repl ()
 > typeOf args
 >      = do
 >          st <- get
 >          let arg = unwords args
->          case Map.lookup (Name arg) (typeEnv st) of
->               Just ty -> liftIO $ putStrLn $ arg ++ "::" ++ pprint ty
->               Nothing -> exec False arg
+>          case Map.lookup (Name arg) (unCtx $ typeEnv st) of
+>               Just ty -> liftIO $ putStrLn $ arg ++ " :: " ++ (show $ pprint ty)
+>               Nothing -> exec arg
 
 > quit :: a -> Repl ()
 > quit _ = liftIO $ exitSuccess
@@ -124,8 +113,8 @@ Tab completion
 > comp n = do
 >            let cmds = [":load", ":browse", ":quit", ":type"]
 >            ctx <- gets typeEnv
->            let defs = Map.keys ctx
->            return $ filter (isPrefixOf n) (cmds ++ defs)
+>            let defs = Map.keys $ unCtx ctx
+>            return $ filter (isPrefixOf n) (cmds ++ map out defs)
 
 > options :: [(String, [String] -> Repl ())]
 > options = [
@@ -142,11 +131,4 @@ Main function
 -------------
 
 > main :: IO ()
-> main
->    = do
->        args <- getArgs
->        case args of
->             []      -> shell (return ())
->             [fname] -> shell (load [fname])
->             _       -> putStrLn "Invalid arguments!"
-
+> main = shell (return ())

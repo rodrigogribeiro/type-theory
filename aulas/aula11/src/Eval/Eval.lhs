@@ -24,15 +24,6 @@ Value definition
 >            | VChar Char
 >            | VClosure Name Term TermEnv
 
-Auxiliar code
--------------
-
-> instance Show Value where
->    show (VInt i) = show i
->    show (VBool b) = show b
->    show (VChar c) = show c
->    show (VClosure _ _ _) = "<<closure>>"
-
 Interpreter code
 ----------------
 
@@ -65,3 +56,12 @@ Interpreter code
 > runEval env nm ex =
 >         let res = runIdentity (eval env ex) in
 >         (res, Map.insert nm res env)
+
+Auxiliar code
+-------------
+
+> instance Show Value where
+>    show (VInt i) = show i
+>    show (VBool b) = show b
+>    show (VChar c) = show c
+>    show (VClosure _ _ _) = "<<closure>>"

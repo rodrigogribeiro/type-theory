@@ -20,8 +20,8 @@ Type inference engine
 > import Tc.TcMonad
 > import Tc.Subst
 
-> inference :: Ctx -> Term -> Either String (Tau, Subst)
-> inference ctx t = fst $ runTcM ctx (infer t)
+> inference :: Ctx -> Term -> Either String Tau
+> inference ctx t = either Left (Right . fst) (fst $ runTcM ctx (infer t))
 
 > infer :: Term -> TcM (Tau , Subst)
 > infer (Const c) = inferConst c
@@ -32,7 +32,8 @@ Type inference engine
 > infer (Abs v t)
 >       = do
 >           v' <- fresh
->           local (insertEnv v (Forall [] v')) (infer t)
+>           (tau,s) <- local (insertEnv v (Forall [] v')) (infer t)
+>           return (TArrow v' tau, s)
 > infer (App l r)
 >       = do
 >           v' <- fresh

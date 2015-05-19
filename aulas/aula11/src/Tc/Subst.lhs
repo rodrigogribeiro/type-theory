@@ -68,7 +68,7 @@ Unification
 > unify (TArrow l r) (TArrow l' r')
 >       = do
 >           s <- unify l l'
->           s' <- unify (apply s r) (apply s r)
+>           s' <- unify (apply s r) (apply s r')
 >           return (compose s' s)
 > unify t t'
 >       | t == t' = return nullSubst

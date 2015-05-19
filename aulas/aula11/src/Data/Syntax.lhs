@@ -11,7 +11,7 @@ A type for names
 ----------------
 
 > newtype Name = Name { out :: String }
->                deriving (Eq, Ord)
+>                deriving (Eq, Ord, Show)
 
 
 Constants
@@ -19,7 +19,7 @@ Constants
 
 > data Lit = ILit Int | BLit Bool |
 >            CLit Char
->            deriving (Eq, Ord)
+>            deriving (Eq, Ord, Show)
 
 
 Term syntax
@@ -30,7 +30,7 @@ Term syntax
 >             App Term Term     |
 >             Const Lit         |
 >             Let Name Term Term
->             deriving (Eq, Ord)
+>             deriving (Eq, Ord, Show)
 
 
 Type syntax
@@ -43,10 +43,10 @@ Type syntax
 >            TBool          |
 >            TChar          |
 >            TArrow Tau Tau
->            deriving (Eq, Ord)
+>            deriving (Eq, Ord, Show)
 
 > data Sigma = Forall [Name] Tau
->              deriving (Eq, Ord)
+>              deriving (Eq, Ord, Show)
 
 
 Pretty-printing 
