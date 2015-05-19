@@ -18,8 +18,32 @@ Top level parser function
 
 > parser :: String ->  Either String Term
 > parser s = case (parse term "" s) of
->                 Left err ->Left $ show err
+>                 Left err -> Left $ show err
 >                 Right t  -> Right t
+
+> parserModule :: String -> Either String [Def]
+> parserModule cont = case (parse modl "" cont) of
+>                          Left err -> Left $ show err
+>                          Right t  -> Right t
+
+Definitions and module
+----------------------
+
+> newtype Def = Def { unDef :: (Name, Term) }
+>               deriving (Eq, Ord, Show)
+
+> def = do
+>         n <- variable
+>         reservedOp "="
+>         t <- term
+>         return (Def (n,t))
+
+> top = do
+>         d <- def
+>         optional semi
+>         return d
+
+> modl = many1 top
 
 
 Term syntax
