@@ -71,9 +71,3 @@ Generalization and instantiation
 > inferConst (BLit _) = return (TBool , nullSubst)
 > inferConst (CLit _) = return (TChar , nullSubst)
 
-Error messages
-
-> undefinedVar :: Name -> TcM a
-> undefinedVar n = throwError msg
->              where
->                 msg = "Undefined variable" ++ (show $ pprint n)

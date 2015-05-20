@@ -24,6 +24,7 @@ algorithm for Core ML.
 > import Tc.TcMonad
 > import Tc.Tc
 
+> import System.Environment
 > import System.Exit
 > import System.Console.Repline
 
@@ -131,4 +132,9 @@ Main function
 -------------
 
 > main :: IO ()
-> main = shell (return ())
+> main = do
+>          args <- getArgs
+>          case args of
+>             []      -> shell (return ())
+>             [fname] -> shell (load [fname])
+>             _       -> putStrLn "Invalid arguments!"

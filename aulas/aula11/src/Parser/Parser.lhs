@@ -21,10 +21,10 @@ Top level parser function
 >                 Left err -> Left $ show err
 >                 Right t  -> Right t
 
-> parserModule :: String -> Either String [Def]
+> parserModule :: String -> Either String [(Name , Term)]
 > parserModule cont = case (parse modl "" cont) of
 >                          Left err -> Left $ show err
->                          Right t  -> Right t
+>                          Right t  -> Right (map unDef t)
 
 Definitions and module
 ----------------------
