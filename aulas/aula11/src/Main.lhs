@@ -6,6 +6,8 @@ Simple type inference for Core-ML
 Here, I show the implementation of a very simple type inference
 algorithm for Core ML.
 
+The shell doesn't work quite well, I'm tired of implementing this. :(
+
 > module Main where
 
 > import Control.Monad.State.Strict
