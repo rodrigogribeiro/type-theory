@@ -30,8 +30,9 @@ Typing contexts
 
 > pprSignature :: (Name , Sigma) -> Doc
 > pprSignature (n, (Forall vs t))
->              | null vs   = pprint t
->              | otherwise = hsep [lforall ,
+>              | null vs   = pprint n <+> (text "::") <+> pprint t
+>              | otherwise = pprint n <+> (text "::") <+>
+>                            hsep [lforall ,
 >                                  pprint vs ,
 >                                  pprint t]
 
@@ -60,3 +61,25 @@ A monad for collecting constraints and generating fresh variables
 >           put (n + 1)
 >           let nm = "x_" ++ show n
 >           return (TyVar (Tyvar (Name nm)))
+
+> insertEnv :: Name -> Sigma -> Ctx -> Ctx
+> insertEnv n sig (Ctx m) = Ctx (Map.insert n sig m)
+
+Error messages
+--------------
+
+> undefinedVar :: Name -> TcM a
+> undefinedVar n = throwError $ "Variable " ++ (ppr n) ++ "isn't defined"
+
+> occursCheckError :: Tyvar -> Tau -> TcM a
+> occursCheckError v t = throwError msg
+>                  where
+>                     msg = "The variable " ++ (ppr v) ++
+>                            "\noccurs in type " ++ (ppr t)
+
+
+> unifyError :: Tau -> Tau -> TcM a
+> unifyError t t' = throwError ("The types\n" ++ (ppr t) ++
+>                               "\nand\n" ++ (ppr t') ++
+>                               "\naren't unifiable!")
+

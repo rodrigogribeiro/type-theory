@@ -20,7 +20,8 @@ Name definition
 Binding definition
 ------------------
 
-> data Binding = Bind Name Term
+> data Binding = Bind { name :: Name
+>                     , term :: Term }
 >                deriving (Eq, Ord)
 
 
