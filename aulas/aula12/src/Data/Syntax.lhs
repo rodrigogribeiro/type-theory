@@ -3,6 +3,8 @@ Syntax definition for Core-ML
 
 > module Data.Syntax where
 
+> import Data.Char (chr, ord)
+
 > import Text.PrettyPrint.HughesPJ
 
 > import Utils.PPrint
@@ -43,13 +45,12 @@ Term definition
 Type definition
 ----------------
 
-> newtype Tyvar = Tyvar { unTyVar :: Int }
+> newtype Tyvar = Tyvar { unTyvar :: Name }
 >                 deriving (Eq , Ord)
 
 Unquantified types
 
-> data Tau = Bound Tyvar
->          | Free  Tyvar
+> data Tau = TyVar Tyvar
 >          | TInt
 >          | TBool
 >          | TChar
@@ -82,11 +83,24 @@ Pretty printting stuff
 >    pprint (Abs v t) = hsep [lam , pprint v ,
 >                             arrow , pprint t]
 >    pprint (App l r) = parensIf (isApp l) l <+> pprint r
->    pprint (Let bnd t) = hsep [llet , pprint bnd , llin , pprint t]
+>    pprint (Let bnd t) = hsep [llet , pprint bnd , lin , pprint t]
 
 > instance PPrint Tyvar where
->    pprint = undefined
+>    pprint = pprint . unTyvar
 
+> instance PPrint Tau where
+>    pprint (TyVar n) = pprint n
+>    pprint (TArrow l r) = parensIf (isArrow l) l <+> pprint r
+>    pprint TInt = text "Int"
+>    pprint TBool = text "Bool"
+>    pprint TChar = text "Char"
+
+> instance PPrint Sigma where
+>    pprint (Forall vs tau)
+>           | null vs   = pprint tau
+>           | otherwise = hsep [lforall ,
+>                               pprint vs ,
+>                               pprint tau]
 
 Auxiliar functions
 ------------------
@@ -94,3 +108,7 @@ Auxiliar functions
 > isApp :: Term -> Bool
 > isApp (App _ _) = True
 > isApp _         = False
+
+> isArrow :: Tau -> Bool
+> isArrow (TArrow _ _) = True
+> isArrow _            = False
