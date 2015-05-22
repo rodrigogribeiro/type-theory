@@ -52,6 +52,9 @@ A monad for collecting constraints and generating fresh variables
 
 > type TcM a = (RWST Ctx [Constraint] Int (ExceptT String Identity)) a
 
+> runTcM :: Ctx -> TcM a -> Either String (a , [Constraint])
+> runTcM ctx m = runExcept (evalRWST m ctx 0)
+
 > addConstr :: Tau -> Tau -> TcM ()
 > addConstr tau tau' = tell [ Constraint (tau, tau') ] 
 
