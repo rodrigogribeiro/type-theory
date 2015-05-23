@@ -119,6 +119,13 @@ Generalization and instantiation
 > generalize tau
 >             = do
 >                 vs <- freeVars
->                 let qs = fv tau `Set.difference` vs
->                 return (Forall (Set.toList qs) tau)
+>                 let qs  = fv tau `Set.difference` vs
+>                     vs' = take (Set.size qs) allBound
+>                     s   = Subst $ Map.fromList $ zip (Set.toList qs) (map TyVar vs') 
+>                 return (Forall vs' (apply s tau))
+
+> allBound :: [Tyvar]
+> allBound = [Tyvar (Name [x]) | x <- ['a' .. 'z']] ++
+>            [Tyvar (Name (x : show i)) | i <- [1 :: Integer ..],
+>                                         x <- ['a'..'z']]
 

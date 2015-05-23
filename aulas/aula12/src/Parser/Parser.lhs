@@ -14,22 +14,23 @@ Parser for coreML
 > import qualified Text.Parsec.Token as Tok
 
 
+Top level parsing function
+--------------------------
+
+> parseModule :: String -> Either String [Binding]
+> parseModule cont
+>             = case parse modl "" cont of
+>                    Left err -> Left $ show err
+>                    Right bs -> Right bs
+
 
 Definitions and module
 ----------------------
 
-> newtype Def = Def { unDef :: (Name, Term) }
->               deriving (Eq, Ord)
-
-> def = do
->         n <- variable
->         reservedOp "="
->         t <- term
->         return (Def (n,t))
 
 > top = do
->         d <- def
->         optional semi
+>         d <- binding
+>         semi
 >         return d
 
 > modl = many1 top
@@ -63,7 +64,8 @@ Term syntax
 > base = liftM Var variable <|>
 >        liftM Const lit    <|>
 >        lam                <|>
->        letin
+>        letin              <|>
+>        parens term
 
 
 > term = return . foldl1 App =<< many1 base

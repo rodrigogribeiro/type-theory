@@ -91,7 +91,7 @@ Pretty printting stuff
 
 > instance PPrint Tau where
 >    pprint (TyVar n) = pprint n
->    pprint (TArrow l r) = parensIf (isArrow l) l <+> pprint r
+>    pprint (TArrow l r) = parensIf (isArrow l) l <+> arrow <+> pprint r
 >    pprint TInt = text "Int"
 >    pprint TBool = text "Bool"
 >    pprint TChar = text "Char"
@@ -100,7 +100,7 @@ Pretty printting stuff
 >    pprint (Forall vs tau)
 >           | null vs   = pprint tau
 >           | otherwise = hsep [lforall ,
->                               pprint vs ,
+>                               pprint vs , dot ,
 >                               pprint tau]
 
 Auxiliar functions

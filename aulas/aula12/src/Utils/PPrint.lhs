@@ -43,3 +43,6 @@ Some simple documents
 
 > bool :: Bool -> Doc
 > bool = text . show
+
+> dot :: Doc
+> dot = text "."
