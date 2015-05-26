@@ -19,21 +19,6 @@ Type inference monad
 > import Utils.PPrint
 
 
-Typing contexts
----------------
-
-> newtype Ctx = Ctx { unCtx :: Map Name Sigma }
->               deriving (Eq , Ord)
-
-> emptyCtx :: Ctx
-> emptyCtx = Ctx Map.empty
-
-> instance PPrint Ctx where
->    pprint =  hcat . intersperse nl . map pprSignature . Map.toList . unCtx
-
-> pprSignature :: (Name , Sigma) -> Doc
-> pprSignature (n, sig) = pprint n <+> text "::" <+> pprint sig
-
 Constraints are just a pair of types
 ------------------------------------
 

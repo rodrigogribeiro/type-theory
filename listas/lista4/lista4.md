@@ -8,7 +8,7 @@ Introdução
 Nas últimas aulas, foram apresentados o sistema de tipos para Core-ML
 e como um algoritmo de inferência para esta linguagem pode ser
 implementado em duas fases: geração de restrições e sua respectiva
-solução. Argumentamos, informalmente que esta estrutura de
+solução. Argumentamos, informalmente, que esta estrutura de
 codificação permite a extensão da linguagem de maneira simples, visto
 que, na maioria dos casos, estender a linguagem significa aumentar o
 número de categorias sintáticas desta, o que implica apenas a

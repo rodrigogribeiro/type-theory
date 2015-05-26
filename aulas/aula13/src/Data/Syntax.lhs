@@ -40,8 +40,17 @@ Term definition
 >           | Con Name
 >           | Abs Name Term
 >           | App Term Term
+>           | Case Term [Alt]
 >           | Let Binding Term
 >           deriving (Eq, Ord)
+
+
+Alternative for case expressions
+--------------------------------
+
+> data Alt = Alt { lhs :: Term
+>                , rhs :: Term }
+>                deriving (Eq, Ord)
 
 
 Type definition
@@ -111,8 +120,12 @@ Pretty printting stuff
 >    pprint (Const l) = pprint l
 >    pprint (Abs v t) = hsep [lam , pprint v ,
 >                             arrow , pprint t]
+>    pprint (Case e as) = hsep [lcase, pprint e, lof,  pprint as]
 >    pprint (App l r) = parensIf (isApp l) l <+> pprint r
 >    pprint (Let bnd t) = hsep [llet , pprint bnd , lin , pprint t]
+
+> instance PPrint Alt where
+>    pprint (Alt l r) = hsep [pprint l, arrow, pprint r , semi]
 
 > instance PPrint Tyvar where
 >    pprint = pprint . unTyvar

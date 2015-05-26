@@ -35,6 +35,13 @@ Some simple documents
 > lin :: Doc
 > lin = text "in"
 
+
+> lcase :: Doc
+> lcase = text "case"
+
+> lof :: Doc
+> lof = text "of"
+
 > lforall :: Doc
 > lforall = text "forall"
 
